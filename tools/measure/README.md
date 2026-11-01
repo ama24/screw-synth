@@ -35,8 +35,11 @@ Both methods give the three keypoints (head_top, bearing, tip) as points on the 
 6. **Size check.** The thread diameter is estimated from the shank width at full resolution and compared with the
    stage-1 size class. A mismatch is reported in `size_check`.
 
-**Method A** (`train/infer.py`): YOLO pose on a 384 px full-resolution crop around the detection (the same crop as
-tool 07's training crops).
+**Method A** (`train/infer.py`): YOLO pose on a 384 px crop around the detection, cut exactly like tool 07's
+training crops (`measure/crops.py`, shared by both). With `labels.crop_mode: scaled` (the default) a part longer than
+about 27 mm gets a bigger window that is shrunk to 384 px, so both ends are in the crop; keypoints are mapped back to
+full-resolution pixels. `fixed` always cuts 384 px at full resolution (about 33 mm: long parts are cut off). The
+model must be trained on crops of the same mode (`measure.infer.crop_mode` overrides it).
 
 **Method B** (`train/classical.py`):
 1. The screw axis is the principal axis of the stage-1 mask; the wider end is the head.
@@ -73,7 +76,10 @@ screwsynth-infer --image capture.png --stage1 runs/seg/stage1_nano/weights/best.
     --stage2 runs/pose/stage2_pose/weights/best.pt --save-vis
 ```
 
-1. **Calibration** comes from `paths.calibration_dir` (or `--calibration`; `--nominal-camera` without it).
+1. **Calibration** comes from `paths.calibration_dir` (or `--calibration`; `--nominal-camera` without it). Without a
+   calibration the nominal camera is `scenegen.nominal_camera` (focal length, pixel size, resolution and
+   **height_mm**: set it to your measured lens-to-plate height until you calibrate). `screwrig detect` and
+   `screwsynth-real` use the same setting.
 2. **Input:** a full sensor frame is cropped to the ROI; an image that is already the ROI is used as it is.
 3. **Stage 1** runs on the ROI downscaled to 1024 px, and its polygons and boxes are mapped back to full resolution.
 4. **Each screw** is measured with A and B.

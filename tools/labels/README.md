@@ -72,8 +72,9 @@ every exported image to its processed scene and full-resolution image, so crops 
 
 For every **measurable** screw (`measurable` in `meta.json`, with labelled keypoints), the tool writes a
 full-resolution crop centred on the object:
-- **Size:** `crop_size_px` (384), fixed. With `crop_mode: scaled`, the side is
-  `max(384, crop_margin × object size)`, resized to 384.
+- **Size:** `crop_size_px` (384). With `crop_mode: scaled` (the default), the side is
+  `max(384, crop_margin × object size)`, resized to 384, so long parts fit whole. `fixed` always cuts 384 px at
+  full resolution (about 33 mm). Inference cuts its crops the same way (`measure/crops.py`).
 - **Clamping:** crops are shifted, not padded, to stay inside the image.
 
 Outputs:

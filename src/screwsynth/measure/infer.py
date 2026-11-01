@@ -22,6 +22,7 @@ from screwsynth.calibration.geometry import Camera, nominal_camera, roi_camera_m
 from screwsynth.common.naming import UNKNOWN
 
 from .classical import classical_keypoints, to_gray
+from .crops import crop_window
 from .geometry import ClassGeometry, Geometry, measure, nearest_size, thread_diameter_mm
 
 log = logging.getLogger("screwsynth.infer")
@@ -59,6 +60,8 @@ class Settings:
     iou: float = 0.6
     max_det: int = 300
     crop_size_px: int = 384
+    crop_mode: str = "scaled"  # must match the crops the keypoint model was trained on
+    crop_margin: float = 1.2
     pose_conf: float = 0.5  # keypoint confidence needed to trust the keypoint model
     measurable_tilt_deg: float = 15.0
     border_px: int = 3  # masks touching the ROI border within this are "cut by the border"
@@ -77,6 +80,10 @@ class Settings:
             max_det=int(m.get("max_det", d.max_det)),
             crop_size_px=int(
                 m.get("crop_size_px", cfg.get("labels", {}).get("crop_size_px", d.crop_size_px))
+            ),
+            crop_mode=str(m.get("crop_mode", cfg.get("labels", {}).get("crop_mode", d.crop_mode))),
+            crop_margin=float(
+                m.get("crop_margin", cfg.get("labels", {}).get("crop_margin", d.crop_margin))
             ),
             pose_conf=float(m.get("pose_conf", d.pose_conf)),
             measurable_tilt_deg=float(
@@ -105,8 +112,13 @@ class Scene:
             self.gray = to_gray(self.image)
 
 
-def load_scene(image_path: Path, calibration: Mapping[str, Any] | None) -> Scene:
-    """Read a photo (full sensor frame, or already the ROI) and build the ROI camera."""
+def load_scene(
+    image_path: Path, calibration: Mapping[str, Any] | None, nominal: Camera | None = None
+) -> Scene:
+    """Read a photo (full sensor frame, or already the ROI) and build the ROI camera.
+
+    Without a calibration the nominal camera is used: `nominal` (nominal_from_config, i.e. the
+    configured height), or the 300 mm default."""
     img = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
     if img is None:
         raise FileNotFoundError(image_path)
@@ -118,7 +130,7 @@ def load_scene(image_path: Path, calibration: Mapping[str, Any] | None) -> Scene
         )
         source = "calibration"
     else:
-        cam_full = nominal_camera()
+        cam_full = nominal if nominal is not None else nominal_camera()
         roi = roi_for_area(cam_full, (0.0, 0.0), (220.0, 220.0), 5.0)
         source = "nominal"
     h, w = img.shape[:2]
@@ -168,22 +180,27 @@ def run_stage1(model: Any, scene: Scene, names: Mapping[int, str], st: Settings)
 def run_pose(
     model: Any, scene: Scene, det: Detection, st: Settings
 ) -> tuple[dict[str, np.ndarray], float] | None:
-    """Stage 2 keypoints on a full-resolution crop centred on the detection (tool 07's crops)."""
+    """Stage 2 keypoints on a crop around the detection, cut like tool 07's training crops
+    (crop_mode fixed or scaled), mapped back to full-resolution ROI pixels."""
     h, w = scene.image.shape[:2]
-    side = st.crop_size_px
-    cx, cy = (det.box[0] + det.box[2]) / 2, (det.box[1] + det.box[3]) / 2
-    x0 = int(np.clip(round(cx - side / 2), 0, max(0, w - side)))
-    y0 = int(np.clip(round(cy - side / 2), 0, max(0, h - side)))
+    size = st.crop_size_px
+    x0, y0, side, scale = crop_window(det.box, (w, h), size, st.crop_mode, st.crop_margin)
     crop = scene.image[y0 : y0 + side, x0 : x0 + side]
-    res = model.predict(crop, imgsz=side, conf=0.1, verbose=False)[0]
+    if side != size:
+        crop = cv2.resize(crop, (size, size), interpolation=cv2.INTER_AREA)
+    res = model.predict(crop, imgsz=size, conf=0.1, verbose=False)[0]
     if res.keypoints is None or res.boxes is None or len(res.boxes) == 0:
         return None
-    boxes = res.boxes.xyxy.cpu().numpy() + [x0, y0, x0, y0]
+
+    def to_full(v: np.ndarray) -> np.ndarray:  # crop pixels -> ROI pixels (pixel centres)
+        return (v + 0.5) / scale - 0.5
+
+    boxes = to_full(res.boxes.xyxy.cpu().numpy()) + [x0, y0, x0, y0]
     ious = [_iou(b, det.box) for b in boxes]
     i = int(np.argmax(ious))
     if ious[i] < 0.3:
         return None
-    xy = res.keypoints.xy.cpu().numpy()[i] + [x0, y0]
+    xy = to_full(res.keypoints.xy.cpu().numpy()[i]) + [x0, y0]
     conf = res.keypoints.conf.cpu().numpy()[i] if res.keypoints.conf is not None else np.ones(3)
     return {k: xy[j] for j, k in enumerate(("head_top", "bearing", "tip"))}, float(np.min(conf))
 
@@ -309,6 +326,7 @@ class Pipeline:
         settings: Settings,
         calibration: Mapping[str, Any] | None,
         classes_yaml: str | Path | None = None,
+        nominal: Camera | None = None,
     ) -> None:
         from ultralytics import YOLO
 
@@ -325,10 +343,11 @@ class Pipeline:
         self.geo = geometry
         self.st = settings
         self.calibration = calibration
+        self.nominal = nominal  # camera without a calibration (nominal_from_config)
 
     def run(self, image_path: Path) -> tuple[dict[str, Any], Scene, list[Detection]]:
         t0 = time.perf_counter()
-        scene = load_scene(image_path, self.calibration)
+        scene = load_scene(image_path, self.calibration, self.nominal)
         result, dets = self.run_scene(scene, str(image_path), t0)
         return result, scene, dets
 

@@ -125,17 +125,24 @@ def test_export_all_formats(tmp_path):
     assert insp.check(ds) == []
 
 
-def test_crop_keypoints_land_on_features(tmp_path):
+@pytest.mark.parametrize("mode", ["fixed", "scaled"])
+def test_crop_keypoints_land_on_features(tmp_path, mode):
     scenes = make_run(tmp_path / "out", "r1", n=3)
-    export(scenes, tmp_path / "ds", NAMES, ["crops"], Settings(crop_size_px=200))
+    export(scenes, tmp_path / "ds", NAMES, ["crops"], Settings(crop_size_px=200, crop_mode=mode))
+    scales = []
     for r in csv.DictReader((tmp_path / "ds" / "crops.csv").open(encoding="utf-8")):
         meta = read_json(f"{r['scene_dir']}/meta.json")
         obj = next(o for o in meta["objects"] if o["instance_id"] == int(r["instance_id"]))
+        s = float(r["scale"])
+        scales.append(s)
         for k in ("head_top", "bearing", "tip"):
             if r[f"{k}_v"] != "0":
                 u, v = obj["keypoints"][k]["uv"]
-                assert float(r[f"{k}_x"]) + int(r["offset_x"]) == pytest.approx(u, abs=1e-6)
-                assert float(r[f"{k}_y"]) + int(r["offset_y"]) == pytest.approx(v, abs=1e-6)
+                x = (float(r[f"{k}_x"]) + 0.5) / s - 0.5 + int(r["offset_x"])
+                y = (float(r[f"{k}_y"]) + 0.5) / s - 0.5 + int(r["offset_y"])
+                assert x == pytest.approx(u, abs=1e-6)
+                assert y == pytest.approx(v, abs=1e-6)
+    assert scales and (mode == "scaled" or all(s == 1 for s in scales))
 
 
 def test_low_visibility_dropped(tmp_path):

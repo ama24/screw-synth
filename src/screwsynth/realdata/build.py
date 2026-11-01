@@ -29,9 +29,10 @@ log = logging.getLogger("screwsynth.realdata")
 
 
 def roi_camera(
-    calibration: Mapping[str, Any] | None,
+    calibration: Mapping[str, Any] | None, nominal: Camera | None = None
 ) -> tuple[Camera, dict[str, int], dict[str, Any]]:
-    """ROI camera (pixel coordinates of the labelling images), its ROI and meta.json `camera`."""
+    """ROI camera (pixel coordinates of the labelling images), its ROI and meta.json `camera`.
+    Without a calibration: `nominal` (nominal_from_config), or the 300 mm default."""
     if calibration is not None:
         full = Camera.from_calibration(calibration)
         roi = dict(
@@ -40,7 +41,7 @@ def roi_camera(
         )
         source = "calibration"
     else:
-        full = nominal_camera()
+        full = nominal if nominal is not None else nominal_camera()
         roi = roi_for_area(full, (0.0, 0.0), (220.0, 220.0), 5.0)
         source = "nominal"
     K = roi_camera_matrix(full.K, roi)
@@ -60,9 +61,11 @@ def roi_camera(
     return cam, roi, meta
 
 
-def prepare_images(session_dir: Path, calibration: Mapping[str, Any] | None) -> list[Path]:
+def prepare_images(
+    session_dir: Path, calibration: Mapping[str, Any] | None, nominal: Camera | None = None
+) -> list[Path]:
     """Crop the captured full frames to the ROI for labelling: annotations/images/<name>.png."""
-    cam, roi, _ = roi_camera(calibration)
+    cam, roi, _ = roi_camera(calibration, nominal)
     out_dir = session_dir / "annotations" / "images"
     out_dir.mkdir(parents=True, exist_ok=True)
     out = []
@@ -113,9 +116,10 @@ def build_scenes(
     calibration: Mapping[str, Any] | None,
     class_ids: Mapping[str, int],
     catalogue: Any,
+    nominal: Camera | None = None,
 ) -> list[Path]:
     """One processed-format scene per labelled image, in <session>/scenes/<image stem>/."""
-    _, _, cam_meta = roi_camera(calibration)
+    _, _, cam_meta = roi_camera(calibration, nominal)
     finishes = finish_of_class(inventory)
     kinds = {p.class_name: p for p in catalogue.parts}
     session = session_dir.name
