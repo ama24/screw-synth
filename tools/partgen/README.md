@@ -86,8 +86,9 @@ tip when the screw lies on its side. Tool 04 computes the exact values per rest 
 - **DIN 913 / DIN 975:** fully threaded. DIN 913: 45° chamfer at both ends and a hex socket (with drill point) in
   the z = 0 end. DIN 975 (cut pieces): each end is either a factory chamfer or sawn off flat with the thread up to
   the edge, drawn from the part id (`rod_end_styles`), so all four combinations occur across the lengths.
-- **Standoffs:** double-chamfered hex body; female ends are tapped `lf` deep (short FF standoffs are tapped
-  through, and an MF keeps a wall to its stud); male studs are threaded and chamfered.
+- **Standoffs:** double-chamfered hex body; male studs are threaded and chamfered. FF standoffs are tapped all the
+  way through (`through: 1`, the catalogue default; without it only short ones are, longer ones get an `lf` deep
+  blind hole at each end). MF standoffs are tapped `lf` deep and keep a wall to their stud.
 - **Corner brackets:** two legs (a × w × t) at 90°, triangular side walls (ts), a slotted hole (dh, slot) and an
   alignment key (key_w × key_h) under each leg. The bracket is built once and mirrored in the plane x = z.
 - **DIN 934 nuts:** double-chamfered hex.

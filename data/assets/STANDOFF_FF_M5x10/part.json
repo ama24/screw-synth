@@ -9,6 +9,7 @@
   "pitch": 0.8,
   "fully_threaded": null,
   "dims": {
+    "through": 1.0,
     "s": 8.0,
     "e": 9.0,
     "ls": 8.0,
@@ -103,5 +104,5 @@
     "axial_per_pitch": 12,
     "round_segments": 64
   },
-  "catalogue_hash": "c16e018684c142cb"
+  "catalogue_hash": "9580cb78f2a690fe"
 }

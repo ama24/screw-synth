@@ -9,6 +9,7 @@
   "pitch": 0.5,
   "fully_threaded": null,
   "dims": {
+    "through": 1.0,
     "s": 5.5,
     "e": 6.2,
     "ls": 6.0,
@@ -60,11 +61,11 @@
   "units": "mm",
   "mesh": {
     "file": "render.ply",
-    "vertices": 9946,
-    "triangles": 19888,
+    "vertices": 14704,
+    "triangles": 29408,
     "watertight": true,
-    "volume_mm3": 334.0185586966556,
-    "area_mm2": 469.0067019437935,
+    "volume_mm3": 305.0214469182531,
+    "area_mm2": 525.2169715147478,
     "bbox_min": [
       -3.175426483154297,
       -2.75,
@@ -76,14 +77,14 @@
       0.0
     ],
     "center_of_mass": [
-      -1.077872440055778e-11,
-      -1.0988150908143439e-11,
-      -7.499999997937595
+      -1.1803404831896588e-11,
+      -1.203274646436292e-11,
+      -7.499999997669782
     ],
     "material_slots": {
       "body": [
         0,
-        19888
+        29408
       ]
     }
   },
@@ -105,5 +106,5 @@
     "axial_per_pitch": 12,
     "round_segments": 64
   },
-  "catalogue_hash": "53aaa9122988b2ab"
+  "catalogue_hash": "e4f8a4b0f58b1691"
 }

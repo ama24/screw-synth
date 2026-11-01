@@ -395,8 +395,9 @@ def _standoff(part: Part, lod: Lod, coll_n: int, top: str, bottom: str) -> Built
     R = d["d"] / 2
     body = _prism(hexagon(s), -L, 0.0) ^ _double_chamfer(s, -L, 0.0, segs)
     pieces = [_hull(np.vstack([np.c_[hexagon(s), np.full(6, -L)], np.c_[hexagon(s), np.zeros(6)]]))]
-    if top == "female" and bottom == "female" and 2 * d["lf"] >= L - 0.6:
-        body = body - _tap(part, -L - 0.5, 0.5, lod)  # short: tapped through
+    through = d.get("through", 0) > 0 or 2 * d["lf"] >= L - 0.6  # short ones are always through
+    if top == "female" and bottom == "female" and through:
+        body = body - _tap(part, -L - 0.5, 0.5, lod)
     else:
         lf = min(d.get("lf", 0.0), L - 0.5)  # leave a wall when a stud is on the other side
         if top == "female":

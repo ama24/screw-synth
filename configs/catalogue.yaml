@@ -500,6 +500,9 @@ families:
     enabled: true
     verified: false
     dims_source: vendor-typical, measure your own
+    # through: 1 = threaded all the way through (the common kind, and what coupling nuts look like
+    # too, so those land in this class); remove it for standoffs with a blind hole at each end
+    common_dims: {through: 1}
     finishes: *standoff_finishes
     sizes: *standoff_sizes
 

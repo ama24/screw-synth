@@ -49,6 +49,7 @@ catalogues.
 | DIN 913 (all sizes) | `lengths` | Deliberately cut at about 3 × d so they never overlap with DIN 975 (see README). Longer set screws exist; adding them breaks that gap. |
 | DIN 975 (all sizes) | `min_length` | Cut to any length: only the shortest piece is set (twice the longest DIN 913 of the size); the rest comes from `length_step` and `catalogue.rod_max_length_mm`. |
 | STANDOFF_* (all) | all dims | **Not standardised.** Vendor-typical: across flats 4/5/5.5/7/8/10 for M2–M6, male stud about 1–1.7 × d, female thread depth about 1.5 × d. Brass M3 standoffs come with s = 5 or 5.5. Measure yours. |
+| STANDOFF_FF (all) | `through` | Threaded all the way through, like the user's own FF standoffs (2026-11-01). Hex coupling nuts (DIN 6334) look the same from above and are sorted into this class. |
 | STANDOFF_* (all) | `lengths` | Common vendor lengths (body only, studs excluded). |
 | BRACKET (all) | all dims | **Not standardised.** Die-cast bracket shape guessed from typical 2020/3030/4040 parts: legs 20/28/36 mm, slotted hole, triangular side walls, alignment key. Measure yours. |
 | All screws | `common` / `uncommon` | My guess at what is uncommon in the trade (mostly lengths 45, 55 and 65, and very long button heads). |
