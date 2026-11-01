@@ -90,7 +90,12 @@
     "problems": []
   },
   "source": "parametric",
-  "info": {},
+  "info": {
+    "end_styles": [
+      "chamfer",
+      "chamfer"
+    ]
+  },
   "generator_version": "1",
   "lod": "med",
   "lod_params": {

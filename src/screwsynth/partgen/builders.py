@@ -10,6 +10,7 @@ Nuts, washers, T-nuts and brackets are centred on the origin (bores along z).
 
 from __future__ import annotations
 
+import hashlib
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -301,29 +302,43 @@ def _end_chamfer(R: float, r_end: float, z_end: float, z_far: float, segs: int) 
     )
 
 
-def _headless(part: Part, lod: Lod, coll_n: int, socket: bool) -> BuiltPart:
-    """Fully threaded rod from z = -L (tip) to z = 0 (head_top), chamfered at both ends.
+def rod_end_styles(part_id: str) -> tuple[str, str]:
+    """(tip end, head_top end) of a cut rod piece: "chamfer" (factory end, 45 deg) or "cut" (sawn
+    off flat, thread profile up to the edge). Drawn from the part id, so a part always looks the
+    same; across lengths and sizes all four combinations occur."""
+    h = hashlib.sha256(part_id.encode()).digest()
+    return tuple("chamfer" if b % 2 == 0 else "cut" for b in h[:2])  # type: ignore[return-value]
 
-    Set screws (DIN 913) have a hexagon socket at z = 0; threaded rod has none. With no head the
-    nominal length is the overall length, so head_top and bearing are the same point.
+
+def _headless(
+    part: Part, lod: Lod, coll_n: int, socket: bool, ends: tuple[str, str] = ("chamfer", "chamfer")
+) -> BuiltPart:
+    """Fully threaded rod from z = -L (tip) to z = 0 (head_top); each end chamfered or cut flat.
+
+    Set screws (DIN 913) have a hexagon socket at z = 0 and both ends chamfered; threaded rod has no
+    socket and its ends vary (rod_end_styles). With no head the nominal length is the overall
+    length, so head_top and bearing are the same point.
     """
     d = part.dims
     L, p = part.length or 0.0, part.pitch or 0.0
     R = d["d"] / 2
     depth = EXT_DEPTH * p
     r_end = R - 1.05 * depth  # chamfer from just below the thread root, as on the screw tips
+    tip, top = ends
     spec = RodSpec(
         radius=R,
         pitch=p,
         z0=-L,
-        z1=0.3,
+        z1=0.3 if top == "chamfer" else 0.0,
         depth=depth,
         crest=CREST,
         root=EXT_ROOT,
-        tip_radius=r_end,
+        tip_radius=r_end if tip == "chamfer" else None,
         tip_slope=1.0,
     )
-    body = _rod(spec, lod) ^ _end_chamfer(R, r_end, 0.0, -L - 1.0, lod.round_segments)
+    body = _rod(spec, lod)
+    if top == "chamfer":
+        body = body ^ _end_chamfer(R, r_end, 0.0, -L - 1.0, lod.round_segments)
     if socket:
         body = body - _socket(d["s"], d["t"], 0.0)
     mesh, slots = _to_trimesh(body)
@@ -333,7 +348,7 @@ def _headless(part: Part, lod: Lod, coll_n: int, socket: bool) -> BuiltPart:
         keypoints={"head_top": [0.0, 0.0, 0.0], "bearing": [0.0, 0.0, 0.0], "tip": [0.0, 0.0, -L]},
         labelled=True,
         collision=[_hull(_cyl_points(R, -L, 0.0, coll_n))],
-        info={"axis_height_when_lying": {"head": R, "tip": R}},
+        info={"axis_height_when_lying": {"head": R, "tip": R}, "end_styles": list(ends)},
     )
 
 
@@ -342,7 +357,7 @@ def build_set_screw(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
 
 
 def build_threaded_rod(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
-    return _headless(part, lod, coll_n, socket=False)
+    return _headless(part, lod, coll_n, socket=False, ends=rod_end_styles(part.id))
 
 
 # ------------------------------------------------------------------------------- hex standoffs

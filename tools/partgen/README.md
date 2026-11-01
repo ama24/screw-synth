@@ -83,8 +83,9 @@ tip when the screw lies on its side. Tool 04 computes the exact values per rest 
   - DIN 933: hex prism with a 30° top chamfer and a washer face (dw, c).
   - ISO 7380: dome with a flat top ring and a hex socket.
   - DIN 7991: 90° cone with a hex socket.
-- **DIN 913 / DIN 975:** fully threaded, 45° chamfer at both ends; DIN 913 has a hex socket (with drill point)
-  in the z = 0 end.
+- **DIN 913 / DIN 975:** fully threaded. DIN 913: 45° chamfer at both ends and a hex socket (with drill point) in
+  the z = 0 end. DIN 975 (cut pieces): each end is either a factory chamfer or sawn off flat with the thread up to
+  the edge, drawn from the part id (`rod_end_styles`), so all four combinations occur across the lengths.
 - **Standoffs:** double-chamfered hex body; female ends are tapped `lf` deep (short FF standoffs are tapped
   through, and an MF keeps a wall to its stud); male studs are threaded and chamfered.
 - **Corner brackets:** two legs (a × w × t) at 90°, triangular side walls (ts), a slotted hole (dh, slot) and an

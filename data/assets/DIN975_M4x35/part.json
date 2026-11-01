@@ -58,8 +58,8 @@
     "vertices": 24159,
     "triangles": 48314,
     "watertight": true,
-    "volume_mm3": 347.25710177247373,
-    "area_mm2": 664.7139634101288,
+    "volume_mm3": 347.68721145092485,
+    "area_mm2": 668.4725585353817,
     "bbox_min": [
       -2.0,
       -2.0,
@@ -71,9 +71,9 @@
       0.0
     ],
     "center_of_mass": [
-      -0.0006087266467452596,
-      0.0002453659403388936,
-      -17.49932102031273
+      4.435649518047172e-05,
+      0.000978635819422529,
+      -17.520810446794737
     ],
     "material_slots": {
       "body": [
@@ -92,7 +92,12 @@
     "problems": []
   },
   "source": "parametric",
-  "info": {},
+  "info": {
+    "end_styles": [
+      "cut",
+      "chamfer"
+    ]
+  },
   "generator_version": "1",
   "lod": "med",
   "lod_params": {

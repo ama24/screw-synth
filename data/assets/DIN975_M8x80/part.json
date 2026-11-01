@@ -55,11 +55,11 @@
   "units": "mm",
   "mesh": {
     "file": "render.ply",
-    "vertices": 30844,
-    "triangles": 61684,
+    "vertices": 30762,
+    "triangles": 61520,
     "watertight": true,
-    "volume_mm3": 3258.2458968049577,
-    "area_mm2": 3074.9620745254088,
+    "volume_mm3": 3263.768981638728,
+    "area_mm2": 3101.0942799525196,
     "bbox_min": [
       -4.0,
       -4.0,
@@ -71,14 +71,14 @@
       0.0
     ],
     "center_of_mass": [
-      -0.000859510234020111,
-      0.00034524672585287315,
-      -39.998801946459295
+      1.2618622781193073e-09,
+      5.315406080790271e-09,
+      -39.99999999504298
     ],
     "material_slots": {
       "body": [
         0,
-        61684
+        61520
       ]
     }
   },
@@ -92,7 +92,12 @@
     "problems": []
   },
   "source": "parametric",
-  "info": {},
+  "info": {
+    "end_styles": [
+      "cut",
+      "cut"
+    ]
+  },
   "generator_version": "1",
   "lod": "med",
   "lod_params": {

@@ -9,7 +9,7 @@ from screwsynth.common.config import load_config
 from screwsynth.common.io import read_json, read_yaml
 from screwsynth.common.paths import repo_root
 from screwsynth.partgen import assets, checks, collision
-from screwsynth.partgen.builders import Lod, build
+from screwsynth.partgen.builders import Lod, build, rod_end_styles
 from screwsynth.partgen.cli import contact_sheet_parts, main
 from screwsynth.partgen.keypoints import nominal_length
 from screwsynth.partgen.profiles import (
@@ -316,9 +316,28 @@ def test_set_screw_socket_and_rod_ends(built):
     v = built["DIN913_M10x30"].mesh.vertices
     top = v[v[:, 2] > -0.01]
     assert np.hypot(top[:, 0], top[:, 1]).min() < 3.0  # socket corners (s = 5) in the top face
-    rod = built["DIN975_M8x50"].mesh.vertices
-    ends = rod[(rod[:, 2] > -0.01) | (rod[:, 2] < -49.99)]
-    assert np.hypot(ends[:, 0], ends[:, 1]).max() < 4.0  # both ends chamfered below d / 2
+    for pid in ("DIN975_M2x12", "DIN975_M8x50"):
+        b, L = built[pid], float(pid.split("x")[-1])
+        rod = b.mesh.vertices
+        tip_style, top_style = rod_end_styles(pid)
+        assert b.info["end_styles"] == [tip_style, top_style]
+        for z, style in ((-L, tip_style), (0.0, top_style)):
+            end = rod[np.abs(rod[:, 2] - z) < 0.01]
+            r = np.hypot(end[:, 0], end[:, 1]).max()
+            d = 2 if "M2x" in pid else 8
+            if style == "chamfer":
+                assert r < d / 2 - 0.1  # chamfered below the root
+            else:
+                assert r == pytest.approx(d / 2, abs=1e-3)  # sawn off: thread up to the edge
+
+
+def test_rod_end_styles_vary():
+    from collections import Counter
+
+    cat = load_catalogue(repo_root() / "configs" / "catalogue.yaml", max_length_mm=80)
+    styles = Counter(rod_end_styles(p.id) for p in cat.parts if p.family == "DIN975")
+    assert len(styles) == 4 and min(styles.values()) >= 5  # every combination, none rare
+    assert rod_end_styles("DIN975_M5x40") == rod_end_styles("DIN975_M5x40")  # deterministic
 
 
 def test_standoff_studs(catalogue, built):
