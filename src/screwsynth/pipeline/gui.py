@@ -51,7 +51,7 @@ from .steps import (
     preflight,
     read_status,
 )
-from .views_tab import camera_views_card, environment_tab
+from .views_tab import camera_views_card, dirt_tab, environment_tab
 
 log = logging.getLogger("screwsynth.pipeline.gui")
 
@@ -260,7 +260,9 @@ class Widgets:
     def _input(self, f: Field, value: Any, store: Callable[[Any], None]) -> None:
         kind = f.kind
         if kind == "bool":
-            ui.switch(value=bool(value), on_change=lambda e: store(e.value))
+            ui.switch(value=bool(value), on_change=lambda e: store(e.value)).mark(
+                f"switch-{f.path}"
+            )
         elif kind in ("int", "float"):
             step = 1 if kind == "int" else _step(value)
             ui.number(
@@ -409,6 +411,7 @@ class BuilderPage:
             t_cam = ui.tab("Camera", icon="photo_camera")
             t_bg = ui.tab("Background", icon="texture")
             t_env = ui.tab("Environment", icon="panorama_photosphere")
+            t_dirt = ui.tab("Dirt", icon="cleaning_services")
             t_parts = ui.tab("Parts", icon="category")
             t_set = ui.tab("All settings", icon="tune")
             t_run = ui.tab("Run", icon="play_arrow")
@@ -418,6 +421,7 @@ class BuilderPage:
             "camera": t_cam,
             "background": t_bg,
             "environment": t_env,
+            "dirt": t_dirt,
             "parts": t_parts,
             "settings": t_set,
             "run": t_run,
@@ -431,6 +435,8 @@ class BuilderPage:
                 background_tab(self)
             with ui.tab_panel(t_env):
                 environment_tab(self)
+            with ui.tab_panel(t_dirt):
+                dirt_tab(self)
             with ui.tab_panel(t_parts):
                 self.parts_tab()
             with ui.tab_panel(t_set):

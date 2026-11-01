@@ -581,3 +581,28 @@ def test_labels_progress_counts_exported_images(base):
     for f in ("train/a.jpg", "train/b.jpg", "val/c.jpg"):
         (staging / f).write_bytes(b"")
     assert step.progress() == (3, 5)
+
+
+@pytest.mark.anyio
+async def test_gui_dirt_tab_switches_parts_and_plate_separately(tmp_path, monkeypatch):
+    """Dirt tab: parts and plate each have their own switch; a range changed to one value saves."""
+    pytest.importorskip("nicegui")
+    from nicegui.testing.user_simulation import user_simulation
+
+    from screwsynth.pipeline import gui
+
+    monkeypatch.setattr(recipe, "recipes_dir", lambda: tmp_path)
+    monkeypatch.setattr(gui, "recipes_dir", lambda: tmp_path)
+    Recipe("dirttest").save(tmp_path / "dirttest.yaml")
+    async with user_simulation(root=gui.page) as user:
+        await user.open("/?recipe=dirttest&tab=dirt")
+        await user.should_see("Dirt on the parts")
+        await user.should_see("Dirt on the plate (bed)")
+        user.find(marker="switch-scenegen.dirt.plate.enabled").elements.pop().value = True
+        oil = user.find(marker="mode-scenegen.dirt.parts.oil").elements.pop()
+        oil.value = "fixed"
+        user.find(marker="save").click()
+    saved = recipe.load_recipe(tmp_path / "dirttest.yaml").config["scenegen"]["dirt"]
+    assert saved["plate"]["enabled"] is True
+    assert "enabled" not in saved.get("parts", {})  # the parts stay clean (config default: off)
+    assert not isinstance(saved["parts"]["oil"], list)

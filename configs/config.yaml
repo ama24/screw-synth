@@ -214,6 +214,21 @@ scenegen:
     colour_temperature_k: [5000, 6500]
     fill_world_strength: [0.0, 0.05]
   wear: {scratches: 0.3, grime: 0.2, fingerprints: 0.1}   # probability per instance
+  # Dirt: dark oil and dust particles. Parts and plate switch on/off separately (GUI: Dirt tab).
+  # oil/dust/dust_size_mm: one value or a range [min, max] drawn per dirty part / dirty plate.
+  dirt:
+    parts:
+      enabled: false           # dirt on the parts
+      share: 0.3               # share of the parts that are dirty (each keeps its dirt in every photo)
+      oil: [0.05, 0.35]        # dark oil smears: covered share of a dirty part (0..1)
+      dust: [0.05, 0.4]        # dust specks: share of the dust grid holding a speck (0..1)
+      dust_size_mm: [0.05, 0.2]  # size of one dust speck
+    plate:
+      enabled: false           # dirt on the plate (bed)
+      share: 0.5               # share of the layouts with a dirty plate (same for all photos of a layout)
+      oil: [0.02, 0.25]        # dark oil stains: covered share of the plate (0..1)
+      dust: [0.05, 0.4]        # dust specks: share of the dust grid holding a speck (0..1)
+      dust_size_mm: [0.1, 0.4]   # size of one dust speck
   materials: {}                # override/extend presets, e.g. zinc_clear: {roughness: [0.1, 0.3]}
   insert_colours: {insert_blue: 0.7, insert_white: 0.3}   # nyloc insert preset -> weight
 
