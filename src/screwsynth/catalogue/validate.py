@@ -136,7 +136,21 @@ def _check_size(fam: Family, spec: SizeSpec, c: _Collector) -> None:
                 f"pitch {spec.pitch} is implausible for {spec.size}",
             )
 
-    if fam.kind in LENGTH_KINDS:
+    if fam.length_step is not None:
+        c.check(fam.length_step > 0, "length-step", where, "length_step must be > 0")
+        c.check(
+            spec.min_length is not None and spec.min_length > 0,
+            "min-length",
+            where,
+            "cut-to-length sizes need min_length > 0",
+        )
+        c.check(
+            not spec.lengths,
+            "length",
+            where,
+            "cut-to-length sizes have no lengths list (min_length + length_step instead)",
+        )
+    elif fam.kind in LENGTH_KINDS:
         if not spec.lengths:
             c.error("no-lengths", where, f"{fam.kind} size has no lengths")
         c.check(all(L > 0 for L in spec.lengths), "length", where, "lengths must be > 0")
@@ -144,6 +158,8 @@ def _check_size(fam: Family, spec: SizeSpec, c: _Collector) -> None:
         c.check(not extra, "uncommon", where, f"uncommon lengths {extra} are not in lengths")
     elif spec.lengths or spec.uncommon:
         c.error("length", where, f"{fam.kind} parts have no lengths")
+    if spec.min_length is not None and fam.length_step is None:
+        c.error("min-length", where, "min_length needs the family's length_step (cut to length)")
 
     if fam.source == "step":
         _check_step(fam, spec, where, c)

@@ -36,6 +36,12 @@ socket is hidden), so their lengths never overlap. Set screws go up to about 3 �
 pieces start at twice the longest set screw of the same size: M3 3–10 / 20–80, M5 5–16 / 35–80,
 M10 10–30 / 60–80. A test checks the gap.
 
+**Threaded rod is cut to any length.** DIN975 has no list of standard lengths. Each size has a `min_length`, the
+family a `length_step` (5 mm), and the longest piece is `catalogue.rod_max_length_mm` in config.yaml (GUI: Parts
+tab, "Longest threaded rod piece"; default 80, independent of `max_length_mm` for screws). The parts are
+min_length, then every multiple of the step up to that maximum (M3 at 80: 20, 25, …, 80; M2: 12, 15, 20, …).
+Measured rod lengths are rounded to 1 mm, not snapped to a list.
+
 ## File format
 
 ```yaml
@@ -76,6 +82,8 @@ Expansion rules:
   is a shell glob tested against the part id, class name, family and size. For example, `DIN985` disables the
   whole family, `M2` every M2 part, and `DIN912_M3x*` all M3 DIN 912 lengths.
 - `common` is false when the size has `common: false` or the length is listed in `uncommon`.
+- Cut-to-length families (`length_step` on the family, `min_length` per size, no `lengths`) expand from
+  min_length in length_step steps up to `catalogue.rod_max_length_mm`; their parts have `cut_to_length: true`.
 - `fully_threaded` (screws) is true when the family has no `b`, or when length ≤ `full_thread_max_length`.
 
 ### Shapes and required dimensions (mm)

@@ -191,3 +191,24 @@ def test_thread_diameter_and_scene_camera():
     }
     assert np.all(camera_from_meta(meta_cam).dist == 0)  # rendered, undistorted image
     assert camera_from_meta({**meta_cam, "distorted": True}).dist[0] == -0.1  # processed image
+
+
+def test_cut_to_length_rounds_instead_of_snapping():
+    """Threaded rod: any length, so the result is the nearest mm, not the nearest list entry."""
+    cam = _camera()
+    geo = ClassGeometry(
+        "DIN975_M5",
+        "DIN975",
+        "M5",
+        "head_top_to_tip",
+        [35.0, 40.0, 45.0],
+        5.0,
+        2.5,
+        cut_to_length=True,
+    )
+    a, t = _screw_points(37.2, 2.5, 2.5)
+    pa, pt = cam.project(np.array([a, t]))
+    m = measure(cam, geo, {"head_top": pa, "bearing": pa, "tip": pt})
+    assert m.snapped_mm == 37.0  # a list snap would give 35
+    assert m.raw_mm == pytest.approx(37.2, abs=0.1)
+    assert m.confidence > 0.9 and "rounded to 1 mm" in " ".join(m.notes)

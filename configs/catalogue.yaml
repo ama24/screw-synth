@@ -289,8 +289,11 @@ families:
     nominal_length: head_top_to_tip  # overall length; either end can be head_top
     enabled: true
     verified: false
-    dims_source: ISO 261 coarse pitch; lengths start at twice the longest DIN 913 of the size
-    # cut pieces come in any length; these are the lengths rendered and snapped to
+    dims_source: ISO 261 coarse pitch; min_length = twice the longest DIN 913 of the size
+    # Cut to any length: no list of standard lengths. Rendered from min_length up to
+    # catalogue.rod_max_length_mm (config.yaml / GUI) in length_step steps; measured lengths are
+    # rounded to 1 mm instead of snapped.
+    length_step: 5
     finishes:
       zinc_clear: all
       stainless_a2: all
@@ -299,14 +302,14 @@ families:
       brass: [M3, M4, M5, M6, M8, M10]
       nylon_white: [M3, M4, M5, M6, M8, M10]
     sizes:
-      M2: {pitch: 0.4, lengths: [12, 16, 20, 25, 30, 40, 50, 60, 70, 80]}
-      M2.5: {pitch: 0.45, lengths: [16, 20, 25, 30, 40, 50, 60, 70, 80]}
-      M3: {pitch: 0.5, lengths: [20, 25, 30, 35, 40, 50, 60, 70, 80]}
-      M4: {pitch: 0.7, lengths: [25, 30, 35, 40, 50, 60, 70, 80]}
-      M5: {pitch: 0.8, lengths: [35, 40, 45, 50, 60, 70, 80]}
-      M6: {pitch: 1.0, lengths: [40, 45, 50, 60, 70, 80]}
-      M8: {pitch: 1.25, lengths: [50, 60, 70, 80]}
-      M10: {pitch: 1.5, lengths: [60, 70, 80]}
+      M2: {pitch: 0.4, min_length: 12}
+      M2.5: {pitch: 0.45, min_length: 16}
+      M3: {pitch: 0.5, min_length: 20}
+      M4: {pitch: 0.7, min_length: 25}
+      M5: {pitch: 0.8, min_length: 35}
+      M6: {pitch: 1.0, min_length: 40}
+      M8: {pitch: 1.25, min_length: 50}
+      M10: {pitch: 1.5, min_length: 60}
 
   # ---------------------------------------------------------------- nuts
   DIN934:

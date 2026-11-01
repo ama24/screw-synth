@@ -10,6 +10,7 @@ from __future__ import annotations
 import fnmatch
 import hashlib
 import json
+import math
 import os
 import re
 from collections.abc import Mapping, Sequence
@@ -102,9 +103,21 @@ _FAMILY_KEYS = {
     "sizes",
     "source",
     "tnut_kind",
+    "length_step",
     "notes",
 }
-_SIZE_KEYS = {"pitch", "dims", "lengths", "uncommon", "enabled", "common", "verified", "step"}
+_SIZE_KEYS = {
+    "pitch",
+    "dims",
+    "lengths",
+    "min_length",
+    "uncommon",
+    "enabled",
+    "common",
+    "verified",
+    "step",
+}
+DEFAULT_CUT_MAX_LENGTH_MM = 80.0  # cut-to-length families when no maximum is configured
 _TNUT_KEY_RE = re.compile(r"^S(?P<slot>[1-9]\d*)_(?P<size>M\d+(?:\.\d+)?)$")
 _FAMILY_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:_[A-Z][A-Z0-9]*)*$")
 _PROFILE_KEY_RE = re.compile(r"^\d{4}$")
@@ -135,6 +148,7 @@ class SizeSpec:
     verified: bool | None = None
     slot: int | None = None
     step: dict[str, Any] | None = None
+    min_length: float | None = None  # cut-to-length families: shortest piece
 
 
 @dataclass
@@ -152,6 +166,9 @@ class Family:
     nominal_length: str | None = None
     source: str = "parametric"
     tnut_kind: str | None = None
+    # cut to length (threaded rod): lengths from each size's min_length up to the configured
+    # maximum in these steps, instead of a list of standard lengths
+    length_step: float | None = None
 
     def finishes_for(self, size_key: str) -> tuple[str, ...]:
         return tuple(f for f, keys in self.finishes.items() if keys is None or size_key in keys)
@@ -180,6 +197,7 @@ class Part:
     tnut_kind: str | None = None
     step: Mapping[str, Any] | None = None
     size_key: str = ""
+    cut_to_length: bool = False  # any length (threaded rod): measured, rounded to 1 mm
 
     @property
     def fully_threaded(self) -> bool | None:
@@ -214,6 +232,7 @@ class Part:
             "slot": self.slot,
             "tnut_kind": self.tnut_kind,
             "step": dict(self.step) if self.step is not None else None,
+            "cut_to_length": self.cut_to_length,
         }
 
     @property
@@ -222,7 +241,8 @@ class Part:
         geom = {
             k: v
             for k, v in self.to_dict().items()
-            if k not in ("enabled", "common", "finishes", "verified", "dims_source")
+            if k
+            not in ("enabled", "common", "finishes", "verified", "dims_source", "cut_to_length")
         }
         return _hash(geom)
 
@@ -259,6 +279,9 @@ class Catalogue:
     rules: list[Rule] = field(default_factory=list)
     max_length_mm: float | None = None
     unknown: UnknownSpec | None = None
+    cut_max_length_mm: float | None = (
+        None  # longest cut-to-length piece (catalogue.rod_max_length_mm)
+    )
     _parts: list[Part] | None = field(default=None, init=False, repr=False)
 
     @property
@@ -362,6 +385,7 @@ def _parse_size(
     if shape == "socket_cap":
         dims.setdefault("ds", dims["d"])
     pitch = raw.get("pitch")
+    min_length = raw.get("min_length")
     step = raw.get("step")
     if step is not None:
         step = dict(_expect(step, Mapping, f"{where}.step"))
@@ -377,6 +401,7 @@ def _parse_size(
         verified=None if raw.get("verified") is None else bool(raw["verified"]),
         slot=slot,
         step=step,
+        min_length=None if min_length is None else _num(min_length, f"{where}.min_length"),
     )
 
 
@@ -436,10 +461,15 @@ def parse_family(name: str, raw: Any) -> Family:
         nominal_length=None if raw.get("nominal_length") is None else str(raw["nominal_length"]),
         source=source,
         tnut_kind=tnut_kind,
+        length_step=None
+        if raw.get("length_step") is None
+        else _num(raw["length_step"], f"{where}.length_step"),
     )
 
 
-def parse_catalogue(data: Any, max_length_mm: float | None = None) -> Catalogue:
+def parse_catalogue(
+    data: Any, max_length_mm: float | None = None, cut_max_length_mm: float | None = None
+) -> Catalogue:
     """Build a Catalogue from the loaded YAML mapping (PyYAML or ruamel round-trip data)."""
     _expect(data, Mapping, "catalogue")
     _check_keys(data, {"version", "finishes", "families", "rules", "unknown"}, "catalogue")
@@ -464,6 +494,7 @@ def parse_catalogue(data: Any, max_length_mm: float | None = None) -> Catalogue:
         rules=rules,
         max_length_mm=max_length_mm,
         unknown=unknown,
+        cut_max_length_mm=cut_max_length_mm,
     )
 
 
@@ -531,10 +562,14 @@ def parse_rules(data: Any, where: str) -> list[Rule]:
     return rules
 
 
-def load_catalogue(path: str | os.PathLike[str], max_length_mm: float | None = None) -> Catalogue:
+def load_catalogue(
+    path: str | os.PathLike[str],
+    max_length_mm: float | None = None,
+    cut_max_length_mm: float | None = None,
+) -> Catalogue:
     from screwsynth.common.io import read_yaml
 
-    return parse_catalogue(read_yaml(path), max_length_mm=max_length_mm)
+    return parse_catalogue(read_yaml(path), max_length_mm, cut_max_length_mm)
 
 
 def catalogue_from_config(cfg: Any, path: str | os.PathLike[str] | None = None) -> Catalogue:
@@ -546,6 +581,7 @@ def catalogue_from_config(cfg: Any, path: str | os.PathLike[str] | None = None) 
     cat = load_catalogue(
         resolve(path or cfg.get("paths.catalogue", "configs/catalogue.yaml")),
         max_length_mm=cfg.get("catalogue.max_length_mm"),
+        cut_max_length_mm=cfg.get("catalogue.rod_max_length_mm"),
     )
     cat.rules = [
         *cat.rules,
@@ -575,8 +611,10 @@ def expand(cat: Catalogue) -> list[Part]:
     parts: list[Part] = []
     for fam in cat.families.values():
         for spec in fam.sizes.values():
-            if fam.kind in LENGTH_KINDS:
-                lengths: list[float | None] = [
+            if fam.length_step:
+                lengths: list[float | None] = list(cut_lengths(spec, fam.length_step, cat))
+            elif fam.kind in LENGTH_KINDS:
+                lengths = [
                     L for L in spec.lengths if cat.max_length_mm is None or cat.max_length_mm >= L
                 ]
             else:
@@ -606,6 +644,7 @@ def expand(cat: Catalogue) -> list[Part]:
                     tnut_kind=fam.tnut_kind,
                     step=_step_for(spec, length),
                     size_key=spec.key,
+                    cut_to_length=bool(fam.length_step),
                 )
                 for rule in cat.rules:
                     if rule.matches(part):
@@ -617,6 +656,22 @@ def expand(cat: Catalogue) -> list[Part]:
                 part = _replace_enabled(part, rule.enabled)
         parts.append(part)
     return parts
+
+
+def cut_lengths(spec: SizeSpec, step: float, cat: Catalogue) -> list[float]:
+    """Lengths of a cut-to-length size: min_length, then the multiples of step above it, up to
+    catalogue.rod_max_length_mm (or max_length_mm, or 80 mm). M3, min 20, step 5, max 60:
+    20, 25, ..., 60; M2, min 12: 12, 15, 20, ..."""
+    hi = cat.cut_max_length_mm or cat.max_length_mm or DEFAULT_CUT_MAX_LENGTH_MM
+    lo = spec.min_length
+    if lo is None or step <= 0 or lo > hi:
+        return []
+    out = [lo]
+    k = math.floor(lo / step + 1e-9) + 1
+    while k * step <= hi + 1e-9:
+        out.append(round(k * step, 6))
+        k += 1
+    return out
 
 
 def _unknown_parts(spec: UnknownSpec | None) -> list[Part]:

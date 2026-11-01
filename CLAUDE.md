@@ -28,7 +28,9 @@ the tool you are working on before changing it.
 - Screws: DIN 912 (socket head cap), DIN 933 (hex head, fully threaded), ISO 7380 (button head),
   DIN 7991 (countersunk socket). Sizes M2, M2.5, M3, M4, M5, M6, M8, M10.
 - Set screws DIN 913 (flat point, M2-M10, up to about 3 x d) and threaded rod pieces DIN 975
-  (M2-M10, from twice the longest DIN 913 of the size, so the two never overlap in length).
+  (M2-M10, from twice the longest DIN 913 of the size, so the two never overlap in length). Rod is
+  cut to any length: rendered from each size's min_length up to catalogue.rod_max_length_mm in
+  5 mm steps, and measured lengths are rounded to 1 mm instead of snapped to standard lengths.
 - Hex standoffs, one class per type and size: STANDOFF_MF / _FF / _MM (male-female,
   female-female, male-male), M2-M6, length measured (the hex body).
 - Corner brackets for aluminium extrusion: BRACKET_2020, BRACKET_3030, BRACKET_4040 (not measured).

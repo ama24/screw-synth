@@ -1,23 +1,25 @@
 {
-  "id": "DIN975_M2x16",
-  "class_name": "DIN975_M2",
+  "id": "DIN975_M6x75",
+  "class_name": "DIN975_M6",
   "family": "DIN975",
   "kind": "screw",
   "shape": "threaded_rod",
-  "size": "M2",
-  "length": 16.0,
-  "pitch": 0.4,
+  "size": "M6",
+  "length": 75.0,
+  "pitch": 1.0,
   "fully_threaded": true,
   "dims": {
-    "d": 2.0
+    "d": 6.0
   },
   "finishes": [
     "zinc_clear",
     "stainless_a2",
     "stainless_a4",
-    "plain_steel"
+    "plain_steel",
+    "brass",
+    "nylon_white"
   ],
-  "nominal_length_mm": 16.0,
+  "nominal_length_mm": 75.0,
   "nominal_length_mode": "head_top_to_tip",
   "keypoints": {
     "head_top": {
@@ -40,43 +42,43 @@
       "xyz": [
         0.0,
         0.0,
-        -16.0
+        -75.0
       ],
       "labelled": true
     }
   },
   "axis_height_when_lying": {
-    "head": 1.0,
-    "tip": 1.0
+    "head": 3.0,
+    "tip": 3.0
   },
   "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
   "units": "mm",
   "mesh": {
     "file": "render.ply",
-    "vertices": 19323,
-    "triangles": 38642,
+    "vertices": 36148,
+    "triangles": 72292,
     "watertight": true,
-    "volume_mm3": 38.33042006854952,
-    "area_mm2": 149.2397151730584,
+    "volume_mm3": 1694.634799446071,
+    "area_mm2": 2137.5943253003416,
     "bbox_min": [
-      -1.0,
-      -1.0,
-      -16.0
+      -3.0,
+      -3.0,
+      -75.0
     ],
     "bbox_max": [
-      1.0,
-      1.0,
+      3.0,
+      3.0,
       0.0
     ],
     "center_of_mass": [
-      -0.00042753667488626987,
-      0.00017281060749869877,
-      -7.999579137632472
+      -0.0005826142695028204,
+      0.00023466514189098337,
+      -37.499060522212474
     ],
     "material_slots": {
       "body": [
         0,
-        38642
+        72292
       ]
     }
   },
@@ -98,5 +100,5 @@
     "axial_per_pitch": 12,
     "round_segments": 64
   },
-  "catalogue_hash": "1bd604d94950f7a7"
+  "catalogue_hash": "e3b02cf917346f22"
 }

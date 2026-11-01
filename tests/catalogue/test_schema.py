@@ -175,7 +175,24 @@ def test_shipped_expansion_2026_11(shipped):
 def test_set_screw_and_rod_lengths_never_cross(shipped):
     """Lying on their side they look alike, so rod pieces start at twice the longest set screw."""
     for size in shipped.families["DIN913"].sizes:
-        grub = shipped.families["DIN913"].sizes[size].lengths
-        rod = shipped.families["DIN975"].sizes[size].lengths
+        grub = [p.length for p in shipped.parts if p.class_name == f"DIN913_{size}"]
+        rod = [p.length for p in shipped.parts if p.class_name == f"DIN975_{size}"]
         assert max(grub) < 3.5 * size_value(size)  # about 3 x d (the next standard length)
-        assert min(rod) >= 2 * max(grub), size
+        assert rod and min(rod) >= 2 * max(grub), size
+
+
+def test_threaded_rod_is_cut_to_any_length():
+    """No standard lengths: min_length per size, length_step, maximum from the config."""
+    from screwsynth.common.config import load_config
+
+    cfg = load_config()
+    default = load_catalogue(SHIPPED, cfg.catalogue.max_length_mm, cfg.catalogue.rod_max_length_mm)
+    m3 = [p.length for p in default.parts if p.class_name == "DIN975_M3"]
+    assert m3 == list(range(20, int(cfg.catalogue.rod_max_length_mm) + 1, 5))
+    assert all(p.cut_to_length for p in default.parts if p.family == "DIN975")
+    assert not any(p.cut_to_length for p in default.parts if p.family != "DIN975")
+    long = load_catalogue(SHIPPED, max_length_mm=80, cut_max_length_mm=150)
+    assert max(p.length for p in long.parts if p.family == "DIN975") == 150
+    assert max(p.length for p in long.parts if p.family == "DIN912") <= 80  # screws unchanged
+    m2 = [p.length for p in long.parts if p.class_name == "DIN975_M2"]
+    assert m2[:3] == [12, 15, 20]  # min_length, then the multiples of the step

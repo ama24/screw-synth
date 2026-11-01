@@ -40,6 +40,7 @@ class ClassGeometry:
     # length -> keypoint heights (mm above the plate) in the usual lying pose
     heights_by_length: dict[float, dict[str, float]] = field(default_factory=dict)
     kind: str = "screw"  # screw | standoff (the classical thread-width check is for screws)
+    cut_to_length: bool = False  # threaded rod: any length, rounded to 1 mm instead of snapped
 
     def heights(self, length: float) -> dict[str, float]:
         """Keypoint heights for a (raw) length: interpolated between the standard lengths."""
@@ -118,6 +119,7 @@ class Geometry:
                     d=float(dims["d"]),
                     head_radius=float(head_r),
                     kind=p.kind,
+                    cut_to_length=p.cut_to_length,
                 )
             g.lengths.append(float(p.length))
             path = Path(rest_dir) / f"{p.id}.json"
@@ -248,9 +250,14 @@ def measure(
 ) -> Measurement:
     """Full measurement of one screw from its keypoints (distorted pixels of `cam`)."""
     raw, a, t = measure_length(cam, geo, keypoints_px[geo.anchor], keypoints_px["tip"])
-    snapped, residual, half_gap = snap(raw, geo.lengths)
     disagreement = abs(raw - other_raw_mm) if other_raw_mm is not None else None
-    conf, notes = confidence(residual, half_gap, measurable, disagreement)
+    if geo.cut_to_length:  # any length: the nearest mm, no standard lengths to snap to
+        snapped, residual = float(round(raw)), raw - round(raw)
+        conf, notes = confidence(0.0, 1.0, measurable, disagreement)
+        notes.append("cut to length: rounded to 1 mm")
+    else:
+        snapped, residual, half_gap = snap(raw, geo.lengths)
+        conf, notes = confidence(residual, half_gap, measurable, disagreement)
     horiz = float(np.linalg.norm(a[:2] - t[:2]))
     tilt = math.degrees(math.atan2(float(a[2] - t[2]), horiz)) if horiz > 0 else 90.0
     return Measurement(raw, snapped, residual, conf, a.tolist(), t.tolist(), tilt, 2, notes)

@@ -47,7 +47,7 @@ catalogues.
 | T-nuts (all) | `pitch` | Coarse pitch was assumed. Correct as long as the thread is standard metric coarse. |
 | DIN 913 (all sizes) | `s`, `t` | ISO 4026 socket sizes (s nominal) and depths (t min, for the longer lengths). Recalled values; short set screws have shallower sockets. |
 | DIN 913 (all sizes) | `lengths` | Deliberately cut at about 3 × d so they never overlap with DIN 975 (see README). Longer set screws exist; adding them breaks that gap. |
-| DIN 975 (all sizes) | `lengths` | Cut pieces have any length. The list is only what gets rendered and what measurements snap to. |
+| DIN 975 (all sizes) | `min_length` | Cut to any length: only the shortest piece is set (twice the longest DIN 913 of the size); the rest comes from `length_step` and `catalogue.rod_max_length_mm`. |
 | STANDOFF_* (all) | all dims | **Not standardised.** Vendor-typical: across flats 4/5/5.5/7/8/10 for M2–M6, male stud about 1–1.7 × d, female thread depth about 1.5 × d. Brass M3 standoffs come with s = 5 or 5.5. Measure yours. |
 | STANDOFF_* (all) | `lengths` | Common vendor lengths (body only, studs excluded). |
 | BRACKET (all) | all dims | **Not standardised.** Die-cast bracket shape guessed from typical 2020/3030/4040 parts: legs 20/28/36 mm, slotted hole, triangular side walls, alignment key. Measure yours. |

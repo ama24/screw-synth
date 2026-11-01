@@ -1,0 +1,104 @@
+{
+  "id": "DIN975_M5x65",
+  "class_name": "DIN975_M5",
+  "family": "DIN975",
+  "kind": "screw",
+  "shape": "threaded_rod",
+  "size": "M5",
+  "length": 65.0,
+  "pitch": 0.8,
+  "fully_threaded": true,
+  "dims": {
+    "d": 5.0
+  },
+  "finishes": [
+    "zinc_clear",
+    "stainless_a2",
+    "stainless_a4",
+    "plain_steel",
+    "brass",
+    "nylon_white"
+  ],
+  "nominal_length_mm": 65.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -65.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.5,
+    "tip": 2.5
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 39156,
+    "triangles": 78308,
+    "watertight": true,
+    "volume_mm3": 1029.260376064942,
+    "area_mm2": 1550.66349092074,
+    "bbox_min": [
+      -2.5,
+      -2.5,
+      -65.0
+    ],
+    "bbox_max": [
+      2.5,
+      2.5,
+      0.0
+    ],
+    "center_of_mass": [
+      -0.00022313515218972345,
+      0.0005144566162944204,
+      -32.499268123418474
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        78308
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 60
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "02913a6aebeb5901"
+}

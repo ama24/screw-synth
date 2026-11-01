@@ -28,6 +28,7 @@ paths:
 # 01 catalogue — parts, sizes, lengths, finishes
 catalogue:
   max_length_mm: 80          # longest screw length expanded from the standard length lists
+  rod_max_length_mm: 80      # threaded rod (DIN975) is cut to any length: longest piece rendered (from each size's min_length in length_step steps)
   # Enable/disable rules applied after catalogue.yaml's own rules (same syntax, last match wins).
   # Dataset recipes use this to pick their parts without editing catalogue.yaml.
   extra_rules: []            # e.g. [{match: "DIN7991*", enabled: false}, {match: "M2", enabled: false}]
