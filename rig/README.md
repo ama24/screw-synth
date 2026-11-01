@@ -17,12 +17,25 @@ sudo apt update && sudo apt install -y python3-picamera2 python3-numpy git libgl
 git clone https://github.com/ama24/supreme-screw-sortering.git && cd supreme-screw-sortering
 python3 -m venv --system-site-packages ~/screwrig     # Picamera2 comes from apt, not pip
 source ~/screwrig/bin/activate
-pip install -r rig/requirements-pi.txt                # screwsynth + screwrig + OpenCV + Ultralytics + NCNN
+pip install -r rig/requirements-pi.txt                # screwsynth + screwrig + OpenCV + PyTorch (CPU) + Ultralytics + NCNN
+pip check                                             # "No broken requirements found."
 screwrig --help
 ```
 
-The install takes 10–20 minutes: Ultralytics pulls PyTorch for the Pi's CPU. It needs the 64-bit OS
-(`uname -m` prints `aarch64`).
+The install takes 10–20 minutes. It needs the 64-bit OS (`uname -m` prints `aarch64`).
+
+**PyTorch must be the CPU build.** The PyPI build for 64-bit ARM is the NVIDIA one (version ending in `+cu…`); on a
+Pi 4 it stops with "Illegal instruction". `requirements-pi.txt` takes PyTorch from its CPU-only index, and
+`screwrig detect` refuses to start with a `+cu` build and prints the fix. To repair an existing install:
+
+```bash
+pip uninstall -y torch torchvision
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+python -c "import torch; print(torch.__version__)"    # must end in +cpu
+```
+
+If even the newest CPU build stops with "Illegal instruction", pin an older one:
+`pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu`.
 
 On the PC (for tests or development): `pip install -e . -e rig/`. OpenCV comes from `screwsynth[calib]` there.
 

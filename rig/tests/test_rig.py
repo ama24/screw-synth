@@ -157,3 +157,13 @@ def test_detect_numbering_model_and_page(tmp_path):
         assert latest["status"] == "ready" and latest["image"] == "det_0001_vis.jpg"
     finally:
         server.shutdown()
+
+
+def test_detect_refuses_the_cuda_torch_on_a_pi():
+    from screwrig.detect import torch_problem
+
+    assert "Illegal instruction" in torch_problem("2.15.0+cu132", "aarch64")
+    assert "download.pytorch.org/whl/cpu" in torch_problem("2.15.0+cu132", "aarch64")
+    assert torch_problem("2.15.0+cpu", "aarch64") is None
+    assert torch_problem("2.5.1", "aarch64") is None
+    assert torch_problem("2.6.0+cu124", "AMD64") is None  # the PC's GPU build is fine
