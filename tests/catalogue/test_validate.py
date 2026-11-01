@@ -96,3 +96,24 @@ def test_unmatched_rule_is_warning(minimal_data):
     issues = validate(parse_catalogue(minimal_data))
     assert [i.code for i in issues] == ["rule-unmatched"]
     assert errors(issues) == []
+
+
+def test_cut_to_length_rules(minimal_data):
+    import copy
+
+    from screwsynth.catalogue.schema import parse_catalogue
+    from screwsynth.catalogue.validate import errors, validate
+
+    data = copy.deepcopy(minimal_data)
+    fam = next(f for f in data["families"].values() if f.get("kind") == "screw")
+    fam["length_step"] = 5
+    for spec in fam["sizes"].values():
+        spec.pop("lengths", None)
+        spec.pop("uncommon", None)
+        spec["min_length"] = 10
+    cat = parse_catalogue(data, cut_max_length_mm=30)
+    assert errors(validate(cat)) == []
+    assert sorted({p.length for p in cat.parts if p.kind == "screw"}) == [10, 15, 20, 25, 30]
+    for spec in fam["sizes"].values():
+        spec["lengths"] = [12]  # a list on a cut-to-length size is an error
+    assert any(i.code == "length" for i in errors(validate(parse_catalogue(data))))

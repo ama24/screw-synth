@@ -196,7 +196,7 @@ def object_meta(
     vis = keypoint_visibility(uv, instance, inst_id, window) if labelled else [NOT_LABELLED] * 3
     mask_area = int((instance == inst_id).sum())
     tilt = axis_tilt_deg(T_plate)
-    is_screw = part["kind"] == "screw"
+    is_screw = part["kind"] in ("screw", "standoff")  # parts with a measured length
     over = occluders(silhouette, instance, inst_id, occlusion_min_px)
     on_it = sorted(int(i) for i in lying_on_it) if lying_on_it is not None else sorted(over)
     zmin = 0.0 if lowest_z_mm is None else float(lowest_z_mm)

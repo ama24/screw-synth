@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from screwsynth.common.naming import parse_part_id, size_value
 
 from .schema import (
+    LENGTH_KINDS,
     MATERIALS,
     NOMINAL_LENGTH_MODES,
     REQUIRED_DIMS,
@@ -83,12 +84,12 @@ def _check_family(cat: Catalogue, fam: Family, c: _Collector) -> None:
             where,
             f"shape {fam.shape!r} belongs to kind {SHAPE_KIND[fam.shape]!r}, not {fam.kind!r}",
         )
-    if fam.kind == "screw":
+    if fam.kind in LENGTH_KINDS:
         c.check(
             fam.nominal_length in NOMINAL_LENGTH_MODES,
             "nominal-length",
             where,
-            f"screws need nominal_length in {NOMINAL_LENGTH_MODES}",
+            f"{fam.kind}s need nominal_length in {NOMINAL_LENGTH_MODES}",
         )
     if not fam.sizes:
         c.error("no-sizes", where, "family has no sizes")
@@ -124,7 +125,7 @@ def _check_size(fam: Family, spec: SizeSpec, c: _Collector) -> None:
             f"d = {d['d']} does not match size {spec.size}",
         )
 
-    if fam.kind in ("screw", "nut", "tnut"):
+    if fam.kind in ("screw", "standoff", "nut", "tnut"):
         if spec.pitch is None:
             c.error("pitch", where, "threaded parts need a pitch")
         else:
@@ -135,14 +136,30 @@ def _check_size(fam: Family, spec: SizeSpec, c: _Collector) -> None:
                 f"pitch {spec.pitch} is implausible for {spec.size}",
             )
 
-    if fam.kind == "screw":
+    if fam.length_step is not None:
+        c.check(fam.length_step > 0, "length-step", where, "length_step must be > 0")
+        c.check(
+            spec.min_length is not None and spec.min_length > 0,
+            "min-length",
+            where,
+            "cut-to-length sizes need min_length > 0",
+        )
+        c.check(
+            not spec.lengths,
+            "length",
+            where,
+            "cut-to-length sizes have no lengths list (min_length + length_step instead)",
+        )
+    elif fam.kind in LENGTH_KINDS:
         if not spec.lengths:
-            c.error("no-lengths", where, "screw size has no lengths")
+            c.error("no-lengths", where, f"{fam.kind} size has no lengths")
         c.check(all(L > 0 for L in spec.lengths), "length", where, "lengths must be > 0")
         extra = sorted(set(spec.uncommon) - set(spec.lengths))
         c.check(not extra, "uncommon", where, f"uncommon lengths {extra} are not in lengths")
     elif spec.lengths or spec.uncommon:
         c.error("length", where, f"{fam.kind} parts have no lengths")
+    if spec.min_length is not None and fam.length_step is None:
+        c.error("min-length", where, "min_length needs the family's length_step (cut to length)")
 
     if fam.source == "step":
         _check_step(fam, spec, where, c)
@@ -177,6 +194,20 @@ def _check_shape(shape: str, d: dict[str, float], where: str, c: _Collector) -> 
     if shape == "washer":
         sane(d["d2"] > d["d1"], "outer diameter d2 must be > inner d1")
         sane(d["h"] < d["d2"] - d["d1"], "washer thickness h is implausibly large")
+    if shape == "set_screw":
+        sane(d["s"] < 0.75 * d["d"], "socket s must leave a wall to the thread (s < 0.75 d)")
+        sane(d["t"] < 2 * d["d"], "socket depth t is implausibly deep")
+    if shape.startswith("standoff_"):
+        sane(d["s"] > d["d"], "across flats s must be > d")
+        sane(d["s"] < d["e"] <= d["s"] / COS30 + 0.01, "across corners e must be in (s, s/cos30]")
+        for key in ("ls", "lf"):
+            if key in d:
+                sane(0.5 * d["d"] <= d[key] <= 5 * d["d"], f"{key} is implausible for d = {d['d']}")
+    if shape == "corner_bracket":
+        sane(d["t"] < d["a"] / 3, "wall t must be < a / 3")
+        sane(2 * d["ts"] + d["dh"] < d["w"], "the hole dh must fit between the side walls")
+        sane(d["dh"] + d["slot"] < d["a"] - d["t"], "the hole/slot must fit on the leg")
+        sane(d["key_w"] < d["w"] and d["key_h"] < d["t"], "the alignment key must be small")
     if shape in ("tnut_slide", "tnut_drop"):
         sane(d["neck_width"] > d["d"] * 0.9, "neck_width must leave room for the thread")
         sane(d["neck_width"] <= d["width"], "neck_width must be <= width")
@@ -188,8 +219,8 @@ def _check_step(fam: Family, spec: SizeSpec, where: str, c: _Collector) -> None:
     if spec.step is None:
         c.error("step-source", where, "source: step needs a 'step' entry")
         return
-    entries = spec.step.items() if fam.kind == "screw" else [(spec.key, spec.step)]
-    if fam.kind == "screw":
+    entries = spec.step.items() if fam.kind in LENGTH_KINDS else [(spec.key, spec.step)]
+    if fam.kind in LENGTH_KINDS:
         keys = set()
         for k in spec.step:
             try:
@@ -202,7 +233,7 @@ def _check_step(fam: Family, spec: SizeSpec, where: str, c: _Collector) -> None:
         if not isinstance(entry, dict) or not entry.get("path"):
             c.error("step-source", f"{where}.step.{key}", "needs a 'path' to the STEP file")
             continue
-        if fam.kind == "screw":
+        if fam.kind in LENGTH_KINDS:
             kps = entry.get("keypoints") or {}
             ok = all(
                 isinstance(kps.get(n), (list, tuple)) and len(kps[n]) == 3

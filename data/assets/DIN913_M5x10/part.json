@@ -1,0 +1,104 @@
+{
+  "id": "DIN913_M5x10",
+  "class_name": "DIN913_M5",
+  "family": "DIN913",
+  "kind": "screw",
+  "shape": "set_screw",
+  "size": "M5",
+  "length": 10.0,
+  "pitch": 0.8,
+  "fully_threaded": true,
+  "dims": {
+    "s": 2.5,
+    "t": 2.0,
+    "d": 5.0
+  },
+  "finishes": [
+    "black_oxide",
+    "stainless_a2",
+    "stainless_a4",
+    "plain_steel"
+  ],
+  "nominal_length_mm": 10.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -10.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.5,
+    "tip": 2.5
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 6168,
+    "triangles": 12332,
+    "watertight": true,
+    "volume_mm3": 144.98749993858846,
+    "area_mm2": 274.88616671648214,
+    "bbox_min": [
+      -2.5,
+      -2.5,
+      -10.0
+    ],
+    "bbox_max": [
+      2.5,
+      2.5,
+      0.0
+    ],
+    "center_of_mass": [
+      0.0008337233161117616,
+      0.002168340025288486,
+      -5.324173210905367
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        12332
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 60
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "0a8fd868a7458830"
+}

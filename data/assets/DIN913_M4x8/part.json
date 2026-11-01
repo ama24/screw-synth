@@ -1,0 +1,104 @@
+{
+  "id": "DIN913_M4x8",
+  "class_name": "DIN913_M4",
+  "family": "DIN913",
+  "kind": "screw",
+  "shape": "set_screw",
+  "size": "M4",
+  "length": 8.0,
+  "pitch": 0.7,
+  "fully_threaded": true,
+  "dims": {
+    "s": 2.0,
+    "t": 1.5,
+    "d": 4.0
+  },
+  "finishes": [
+    "black_oxide",
+    "stainless_a2",
+    "stainless_a4",
+    "plain_steel"
+  ],
+  "nominal_length_mm": 8.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -8.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.0,
+    "tip": 2.0
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 5648,
+    "triangles": 11292,
+    "watertight": true,
+    "volume_mm3": 72.83019542907026,
+    "area_mm2": 172.6982700622313,
+    "bbox_min": [
+      -2.0,
+      -2.0,
+      -8.0
+    ],
+    "bbox_max": [
+      2.0,
+      2.0,
+      0.0
+    ],
+    "center_of_mass": [
+      0.0004282433220094308,
+      0.0028777463734277254,
+      -4.253557445155981
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        11292
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 60
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "2ec56b80375ec3d6"
+}

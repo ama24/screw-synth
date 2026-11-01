@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 import numpy as np
 import trimesh
 
-from screwsynth.catalogue.schema import Part
+from screwsynth.catalogue.schema import LENGTH_KINDS, Part
 
 from .collision import MAX_TRIANGLES, contained_fraction, total_triangles
 from .keypoints import nominal_length
@@ -43,7 +43,24 @@ def check_dimensions(part: Part, mesh: trimesh.Trimesh, tol: float = 0.01) -> li
     v = mesh.vertices
     out: list[str] = []
     zmin, zmax = float(v[:, 2].min()), float(v[:, 2].max())
-    if part.kind == "screw":
+    if part.shape in ("set_screw", "threaded_rod"):
+        _close("head_top z", zmax, 0.0, tol, out)
+        _close("overall length", zmax - zmin, part.length or 0.0, tol, out)
+        _close("thread major diameter", float(_radial(v).max()) * 2, d["d"], tol, out)
+    elif part.kind == "standoff":
+        L, ls = part.length or 0.0, d.get("ls", 0.0)
+        top = ls if part.shape == "standoff_mm" else 0.0
+        bottom = -L if part.shape == "standoff_ff" else -L - ls
+        _close("top z", zmax, top, tol, out)
+        _close("bottom z", zmin, bottom, tol, out)
+        hexa = v[(v[:, 2] > -L + 0.02) & (v[:, 2] < -0.02)]
+        _close("across flats s", float(np.abs(hexa[:, 1]).max()) * 2, d["s"], tol, out)
+    elif part.kind == "bracket":
+        ext = v.max(axis=0) - v.min(axis=0)
+        _close("leg x (with key)", float(ext[0]), d["a"] + d["key_h"], tol, out)
+        _close("width", float(ext[1]), d["w"], tol, out)
+        _close("leg z (with key)", float(ext[2]), d["a"] + d["key_h"], tol, out)
+    elif part.kind == "screw":
         L = part.length or 0.0
         k = d["k"]
         _close("head top z", zmax, k, tol, out)
@@ -88,7 +105,7 @@ def check_dimensions(part: Part, mesh: trimesh.Trimesh, tol: float = 0.01) -> li
 def check_keypoints(
     part: Part, keypoints: Mapping[str, Sequence[float]], tol: float = 0.01
 ) -> list[str]:
-    if part.kind != "screw" or part.length is None:
+    if part.kind not in LENGTH_KINDS or part.length is None:
         return []
     out: list[str] = []
     _close("keypoint nominal length", nominal_length(part, keypoints) or 0.0, part.length, tol, out)

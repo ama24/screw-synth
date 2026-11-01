@@ -1,0 +1,109 @@
+{
+  "id": "STANDOFF_FF_M3x6",
+  "class_name": "STANDOFF_FF_M3",
+  "family": "STANDOFF_FF",
+  "kind": "standoff",
+  "shape": "standoff_ff",
+  "size": "M3",
+  "length": 6.0,
+  "pitch": 0.5,
+  "fully_threaded": null,
+  "dims": {
+    "s": 5.5,
+    "e": 6.2,
+    "ls": 6.0,
+    "lf": 5.0,
+    "d": 3.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black",
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": 6.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -6.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.75,
+    "tip": 2.75
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 6064,
+    "triangles": 12128,
+    "watertight": true,
+    "volume_mm3": 121.44083073215727,
+    "area_mm2": 231.68142564691118,
+    "bbox_min": [
+      -3.175426483154297,
+      -2.75,
+      -6.0
+    ],
+    "bbox_max": [
+      3.175426483154297,
+      2.75,
+      0.0
+    ],
+    "center_of_mass": [
+      -2.964674037012036e-11,
+      -3.022238487647209e-11,
+      -2.999999999800931
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        12128
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 20
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "11a05b1f400f3c43"
+}

@@ -1,0 +1,109 @@
+{
+  "id": "STANDOFF_FF_M3x40",
+  "class_name": "STANDOFF_FF_M3",
+  "family": "STANDOFF_FF",
+  "kind": "standoff",
+  "shape": "standoff_ff",
+  "size": "M3",
+  "length": 40.0,
+  "pitch": 0.5,
+  "fully_threaded": null,
+  "dims": {
+    "s": 5.5,
+    "e": 6.2,
+    "ls": 6.0,
+    "lf": 5.0,
+    "d": 3.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black",
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": 40.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -40.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.75,
+    "tip": 2.75
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 9946,
+    "triangles": 19888,
+    "watertight": true,
+    "volume_mm3": 988.9502741161523,
+    "area_mm2": 945.3206741145557,
+    "bbox_min": [
+      -3.175426483154297,
+      -2.75,
+      -40.0
+    ],
+    "bbox_max": [
+      3.175426483154297,
+      2.75,
+      0.0
+    ],
+    "center_of_mass": [
+      -3.640497993248916e-12,
+      -3.711176840409385e-12,
+      -20.000000002219764
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        19888
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 20
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "33cc416f410994bf"
+}

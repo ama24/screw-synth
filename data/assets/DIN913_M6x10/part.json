@@ -1,0 +1,104 @@
+{
+  "id": "DIN913_M6x10",
+  "class_name": "DIN913_M6",
+  "family": "DIN913",
+  "kind": "screw",
+  "shape": "set_screw",
+  "size": "M6",
+  "length": 10.0,
+  "pitch": 1.0,
+  "fully_threaded": true,
+  "dims": {
+    "s": 3.0,
+    "t": 2.0,
+    "d": 6.0
+  },
+  "finishes": [
+    "black_oxide",
+    "stainless_a2",
+    "stainless_a4",
+    "plain_steel"
+  ],
+  "nominal_length_mm": 10.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -10.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 3.0,
+    "tip": 3.0
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 4964,
+    "triangles": 9924,
+    "watertight": true,
+    "volume_mm3": 205.76426660252778,
+    "area_mm2": 332.9146533837482,
+    "bbox_min": [
+      -3.0,
+      -3.0,
+      -10.0
+    ],
+    "bbox_max": [
+      3.0,
+      3.0,
+      0.0
+    ],
+    "center_of_mass": [
+      -0.004798758531929831,
+      0.0019316526858931637,
+      -5.333636751317073
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        9924
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 60
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "c435a575c2be2152"
+}

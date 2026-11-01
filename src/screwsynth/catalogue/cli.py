@@ -50,17 +50,18 @@ class _Ctx:
         self.max_length = (
             args.max_length if args.max_length is not None else cfg.get("catalogue.max_length_mm")
         )
+        self.cut_max_length = cfg.get("catalogue.rod_max_length_mm")
         # config-level selection (dataset recipes); edits never write these into the file
         self.extra_rules = parse_rules(cfg.get("catalogue.extra_rules"), "catalogue.extra_rules")
 
     def load(self) -> Catalogue:
-        cat = load_catalogue(self.catalogue_path, max_length_mm=self.max_length)
+        cat = load_catalogue(self.catalogue_path, self.max_length, self.cut_max_length)
         cat.rules = [*cat.rules, *self.extra_rules]
         return cat
 
     def save_checked(self, doc: Any) -> Catalogue:
         """Validate an edited round-trip document and write it only if it has no errors."""
-        cat = parse_catalogue(doc, max_length_mm=self.max_length)
+        cat = parse_catalogue(doc, self.max_length, self.cut_max_length)
         errs = errors(validate(cat))
         if errs:
             for issue in errs:

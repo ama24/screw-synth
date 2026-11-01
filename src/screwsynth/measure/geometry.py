@@ -39,6 +39,8 @@ class ClassGeometry:
     head_radius: float  # radius the head rests on when lying (dk/2, or s/2 for hex heads)
     # length -> keypoint heights (mm above the plate) in the usual lying pose
     heights_by_length: dict[float, dict[str, float]] = field(default_factory=dict)
+    kind: str = "screw"  # screw | standoff (the classical thread-width check is for screws)
+    cut_to_length: bool = False  # threaded rod: any length, rounded to 1 mm instead of snapped
 
     def heights(self, length: float) -> dict[str, float]:
         """Keypoint heights for a (raw) length: interpolated between the standard lengths."""
@@ -92,7 +94,7 @@ class Geometry:
 
     @classmethod
     def from_config(cls, cfg: Any) -> Geometry:
-        from screwsynth.catalogue.schema import catalogue_from_config
+        from screwsynth.catalogue.schema import LENGTH_KINDS, catalogue_from_config
         from screwsynth.common.io import read_json
         from screwsynth.common.paths import resolve
 
@@ -101,12 +103,13 @@ class Geometry:
         out: dict[str, ClassGeometry] = {}
         missing = 0
         for p in cat.enabled_parts:
-            if p.kind != "screw" or p.length is None:
+            if p.kind not in LENGTH_KINDS or p.length is None:
                 continue
             g = out.get(p.class_name)
             if g is None:
                 dims = p.dims
-                head_r = dims["s"] / 2 if p.shape == "hex" else dims.get("dk", dims["d"]) / 2
+                hex_body = p.shape == "hex" or p.kind == "standoff"
+                head_r = dims["s"] / 2 if hex_body else dims.get("dk", dims["d"]) / 2
                 g = out[p.class_name] = ClassGeometry(
                     class_name=p.class_name,
                     family=p.family,
@@ -115,6 +118,8 @@ class Geometry:
                     lengths=[],
                     d=float(dims["d"]),
                     head_radius=float(head_r),
+                    kind=p.kind,
+                    cut_to_length=p.cut_to_length,
                 )
             g.lengths.append(float(p.length))
             path = Path(rest_dir) / f"{p.id}.json"
@@ -245,9 +250,14 @@ def measure(
 ) -> Measurement:
     """Full measurement of one screw from its keypoints (distorted pixels of `cam`)."""
     raw, a, t = measure_length(cam, geo, keypoints_px[geo.anchor], keypoints_px["tip"])
-    snapped, residual, half_gap = snap(raw, geo.lengths)
     disagreement = abs(raw - other_raw_mm) if other_raw_mm is not None else None
-    conf, notes = confidence(residual, half_gap, measurable, disagreement)
+    if geo.cut_to_length:  # any length: the nearest mm, no standard lengths to snap to
+        snapped, residual = float(round(raw)), raw - round(raw)
+        conf, notes = confidence(0.0, 1.0, measurable, disagreement)
+        notes.append("cut to length: rounded to 1 mm")
+    else:
+        snapped, residual, half_gap = snap(raw, geo.lengths)
+        conf, notes = confidence(residual, half_gap, measurable, disagreement)
     horiz = float(np.linalg.norm(a[:2] - t[:2]))
     tilt = math.degrees(math.atan2(float(a[2] - t[2]), horiz)) if horiz > 0 else 90.0
     return Measurement(raw, snapped, residual, conf, a.tolist(), t.tolist(), tilt, 2, notes)

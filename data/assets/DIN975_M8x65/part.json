@@ -1,0 +1,109 @@
+{
+  "id": "DIN975_M8x65",
+  "class_name": "DIN975_M8",
+  "family": "DIN975",
+  "kind": "screw",
+  "shape": "threaded_rod",
+  "size": "M8",
+  "length": 65.0,
+  "pitch": 1.25,
+  "fully_threaded": true,
+  "dims": {
+    "d": 8.0
+  },
+  "finishes": [
+    "zinc_clear",
+    "stainless_a2",
+    "stainless_a4",
+    "plain_steel",
+    "brass",
+    "nylon_white"
+  ],
+  "nominal_length_mm": 65.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -65.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 4.0,
+    "tip": 4.0
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 25084,
+    "triangles": 50164,
+    "watertight": true,
+    "volume_mm3": 2649.0775403490547,
+    "area_mm2": 2522.3468200706475,
+    "bbox_min": [
+      -4.0,
+      -4.0,
+      -65.0
+    ],
+    "bbox_max": [
+      4.0,
+      4.0,
+      0.0
+    ],
+    "center_of_mass": [
+      6.503888386896226e-05,
+      0.0016722411688156376,
+      -32.532639268632494
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        50164
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 60
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {
+    "end_styles": [
+      "cut",
+      "chamfer"
+    ]
+  },
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "9c8f40ea5f32fff9"
+}

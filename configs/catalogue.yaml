@@ -1,10 +1,12 @@
 # screw-synth part catalogue: the single source of truth for every part a dataset can contain.
 #
 # Layout
-#   finishes:  every visual finish (never a class). material: metal | plastic.
+#   finishes:  every visual finish (never a class). material: metal | plastic. Aluminium only
+#              natural or black anodised (corner brackets, standoffs), no coloured anodising.
 #   families:  one entry per standard (DIN912, DIN934, ...). Each family holds its metadata,
 #              the finishes it is sold in, and a "sizes" table with the dimensions per size
-#              (standard symbols, mm). Screws also list their standard lengths per size.
+#              (standard symbols, mm). Screws and standoffs also list their lengths per size.
+#              kinds: screw, standoff, nut, washer, tnut, bracket (size keys 2020/3030/4040).
 #   rules:     ordered enable/disable overrides, written by `screwsynth-catalogue enable|disable`.
 # The flat part list (family x size x length) is generated in code, up to
 # catalogue.max_length_mm in configs/config.yaml. Part ids follow CLAUDE.md, e.g. DIN912_M4x16.
@@ -34,6 +36,8 @@ finishes:
   brass: {label: Brass, material: metal}
   nylon_white: {label: Nylon white/natural, material: plastic}
   nylon_black: {label: Nylon black, material: plastic}
+  aluminium: {label: Aluminium natural, material: metal}
+  aluminium_black: {label: Aluminium black anodised, material: metal}
 
 families:
   # ---------------------------------------------------------------- screws
@@ -249,6 +253,64 @@ families:
         lengths: [12, 16, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 80, 90, 100]
         uncommon: [55, 65]
 
+  # Set screws and threaded rod look alike from above when they lie on their side (the socket is
+  # hidden), so their lengths never overlap: set screws up to about 3 x d, rod pieces from twice
+  # the longest set screw of the same size.
+  DIN913:
+    title: Hexagon socket set screw with flat point (grub screw)
+    standard: DIN 913 / ISO 4026
+    kind: screw
+    shape: set_screw
+    nominal_length: head_top_to_tip  # overall length; head_top = the socket end
+    enabled: true
+    verified: false
+    dims_source: ISO 4026:2003 (s nominal, t min); lengths limited to about 3 x d (see above)
+    # s socket across flats, t socket depth
+    finishes:
+      black_oxide: all
+      stainless_a2: all
+      stainless_a4: all
+      plain_steel: all
+    sizes:
+      M2: {pitch: 0.4, dims: {s: 0.9, t: 0.8}, lengths: [2, 3, 4, 5, 6]}
+      M2.5: {pitch: 0.45, dims: {s: 1.3, t: 1.2}, lengths: [3, 4, 5, 6, 8]}
+      M3: {pitch: 0.5, dims: {s: 1.5, t: 1.2}, lengths: [3, 4, 5, 6, 8, 10]}
+      M4: {pitch: 0.7, dims: {s: 2.0, t: 1.5}, lengths: [4, 5, 6, 8, 10, 12]}
+      M5: {pitch: 0.8, dims: {s: 2.5, t: 2.0}, lengths: [5, 6, 8, 10, 12, 16]}
+      M6: {pitch: 1.0, dims: {s: 3.0, t: 2.0}, lengths: [6, 8, 10, 12, 16, 20]}
+      M8: {pitch: 1.25, dims: {s: 4.0, t: 3.0}, lengths: [8, 10, 12, 16, 20, 25]}
+      M10: {pitch: 1.5, dims: {s: 5.0, t: 4.0}, lengths: [10, 12, 16, 20, 25, 30]}
+
+  DIN975:
+    title: Threaded rod (cut pieces)
+    standard: DIN 975 / DIN 976-1
+    kind: screw
+    shape: threaded_rod
+    nominal_length: head_top_to_tip  # overall length; either end can be head_top
+    enabled: true
+    verified: false
+    dims_source: ISO 261 coarse pitch; min_length = twice the longest DIN 913 of the size
+    # Cut to any length: no list of standard lengths. Rendered from min_length up to
+    # catalogue.rod_max_length_mm (config.yaml / GUI) in length_step steps; measured lengths are
+    # rounded to 1 mm instead of snapped.
+    length_step: 5
+    finishes:
+      zinc_clear: all
+      stainless_a2: all
+      stainless_a4: all
+      plain_steel: all
+      brass: [M3, M4, M5, M6, M8, M10]
+      nylon_white: [M3, M4, M5, M6, M8, M10]
+    sizes:
+      M2: {pitch: 0.4, min_length: 12}
+      M2.5: {pitch: 0.45, min_length: 16}
+      M3: {pitch: 0.5, min_length: 20}
+      M4: {pitch: 0.7, min_length: 25}
+      M5: {pitch: 0.8, min_length: 35}
+      M6: {pitch: 1.0, min_length: 40}
+      M8: {pitch: 1.25, min_length: 50}
+      M10: {pitch: 1.5, min_length: 60}
+
   # ---------------------------------------------------------------- nuts
   DIN934:
     title: Hexagon nut
@@ -398,9 +460,91 @@ families:
       S8_M5: {pitch: 0.8, dims: {length: 16.0, width: 8.0, height: 6.5, neck_width: 7.8, neck_height: 2.0}}
       S8_M6: {pitch: 1.0, dims: {length: 16.0, width: 8.0, height: 6.5, neck_width: 7.8, neck_height: 2.0}}
 
+  # ---------------------------------------------------------------- hex standoffs (spacers)
+  # One family per type: MF male-female, FF female-female, MM male-male. The nominal length is
+  # the hex body: head_top and tip are its two end faces, the male studs come on top. The three
+  # families share one size table (YAML anchor &standoff_sizes), so a length added to one of
+  # them is added to all three.
+  # s across flats, e across corners, ls male stud length, lf female thread depth
+  STANDOFF_MF:
+    title: Hex standoff, male-female
+    standard: none (vendor-typical)
+    kind: standoff
+    shape: standoff_mf
+    nominal_length: head_top_to_tip
+    enabled: true
+    verified: false
+    dims_source: vendor-typical, measure your own
+    finishes: &standoff_finishes
+      brass: all
+      stainless_a2: all
+      zinc_clear: all
+      nylon_white: [M2, M2.5, M3, M4]
+      nylon_black: [M2, M2.5, M3, M4]
+      aluminium: [M3, M4, M5, M6]
+      aluminium_black: [M3, M4, M5, M6]
+    sizes: &standoff_sizes
+      M2: {pitch: 0.4, dims: {s: 4.0, e: 4.5, ls: 4.0, lf: 3.5}, lengths: [3, 4, 5, 6, 8, 10, 12, 15, 20]}
+      M2.5: {pitch: 0.45, dims: {s: 5.0, e: 5.6, ls: 5.0, lf: 4.5}, lengths: [3, 4, 5, 6, 8, 10, 12, 15, 20, 25]}
+      M3: {pitch: 0.5, dims: {s: 5.5, e: 6.2, ls: 6.0, lf: 5.0}, lengths: [5, 6, 8, 10, 12, 15, 20, 25, 30, 35, 40]}
+      M4: {pitch: 0.7, dims: {s: 7.0, e: 7.9, ls: 7.0, lf: 7.0}, lengths: [6, 8, 10, 12, 15, 20, 25, 30, 35, 40, 45, 50]}
+      M5: {pitch: 0.8, dims: {s: 8.0, e: 9.0, ls: 8.0, lf: 8.0}, lengths: [8, 10, 12, 15, 20, 25, 30, 35, 40, 50]}
+      M6: {pitch: 1.0, dims: {s: 10.0, e: 11.3, ls: 10.0, lf: 10.0}, lengths: [10, 12, 15, 20, 25, 30, 35, 40, 50, 60]}
+
+  STANDOFF_FF:
+    title: Hex standoff, female-female
+    standard: none (vendor-typical)
+    kind: standoff
+    shape: standoff_ff
+    nominal_length: head_top_to_tip
+    enabled: true
+    verified: false
+    dims_source: vendor-typical, measure your own
+    finishes: *standoff_finishes
+    sizes: *standoff_sizes
+
+  STANDOFF_MM:
+    title: Hex standoff, male-male
+    standard: none (vendor-typical)
+    kind: standoff
+    shape: standoff_mm
+    nominal_length: head_top_to_tip
+    enabled: true
+    verified: false
+    dims_source: vendor-typical, measure your own
+    finishes:
+      brass: all
+      stainless_a2: all
+      zinc_clear: all
+      nylon_white: [M2, M2.5, M3, M4]
+      nylon_black: [M2, M2.5, M3, M4]
+    sizes: *standoff_sizes
+
+  # ---------------------------------------------------------------- extrusion corner brackets
+  # Die-cast aluminium angle brackets for 2020/3030/4040 profiles: two legs with a slotted hole,
+  # triangular side walls, and an alignment key under each leg that sits in the profile slot.
+  # a leg length, w width, t leg thickness, ts side-wall thickness, dh hole diameter,
+  # slot hole elongation, key_w/key_h alignment key width/height
+  BRACKET:
+    title: Corner bracket for aluminium extrusion
+    standard: none (vendor-typical)
+    kind: bracket
+    shape: corner_bracket
+    enabled: true
+    verified: false
+    dims_source: vendor-typical, measure your own
+    finishes:
+      aluminium: all
+      aluminium_black: all
+    sizes:
+      "2020": {dims: {a: 20.0, w: 20.0, t: 3.0, ts: 2.0, dh: 5.5, slot: 2.0, key_w: 6.0, key_h: 1.2}}
+      "3030": {dims: {a: 28.0, w: 28.0, t: 4.0, ts: 2.5, dh: 6.5, slot: 3.0, key_w: 8.0, key_h: 1.5}}
+      "4040": {dims: {a: 36.0, w: 36.0, t: 5.0, ts: 3.0, dh: 8.5, slot: 3.0, key_w: 8.0, key_h: 2.0}}
+
 # ---------------------------------------------------------------- unknown (rejected) parts
-# Things that are not in the catalogue but end up on the plate anyway (wood screws, threaded rod,
-# lock washers, pins, brackets, spacers, plates, plastic bits). They all get the single class
+# Things that are not in the catalogue but end up on the plate anyway (wood screws, lock washers,
+# pins, bent sheet-metal brackets, plates, plastic bits). Threaded rod and hex standoffs are
+# catalogue classes (DIN975, STANDOFF_*), so they are no longer unknown types. They all get the single class
 # UNKNOWN, so the machine can reject them instead of forcing a wrong class. Each type gets
 # `variants` random shapes, drawn from the ranges below (mm) and seeded by the part id
 # (UNKNOWN_WOODSCREW_01 ...). Disable all with `enabled: false` or a rule {match: UNKNOWN}.
@@ -410,12 +554,10 @@ unknown:
   finishes: [zinc_clear, zinc_yellow, black_oxide, stainless_a2, plain_steel, brass]
   types:
     wood_screw: {d: [3, 5], length: [12, 50]}        # pointed self-tapping / wood screws
-    threaded_rod: {d: [3, 8], length: [10, 70]}      # cut pieces of threaded rod
     split_washer: {d: [3, 10]}                       # spring lock washers (DIN 127 look)
     tooth_washer: {d: [3, 10]}                       # toothed lock washers
     pin: {d: [2, 8], length: [6, 40]}                # dowel / cylindrical pins
     bracket: {size: [12, 40]}                        # bent sheet-metal angle brackets
-    standoff: {d: [3, 6], length: [8, 30]}           # hex spacers / coupling nuts
     plate: {size: [15, 50]}                          # flat plates with holes
     blob: {size: [5, 25], finishes: [nylon_white, nylon_black, black_oxide, zinc_clear]}  # odd bits
 

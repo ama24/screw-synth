@@ -85,7 +85,10 @@ def test_every_unknown_type_builds(shipped_data):
     from screwsynth.partgen.builders import Lod, build
     from screwsynth.partgen.checks import check_collision, check_mesh
 
-    cat = parse_catalogue(copy.deepcopy(shipped_data))
+    data = copy.deepcopy(shipped_data)
+    for t in UNKNOWN_TYPES:  # also the types the shipped catalogue leaves out (rod, standoff)
+        data["unknown"]["types"].setdefault(t, {})
+    cat = parse_catalogue(data)
     lod = Lod(24, 8, 32)
     first = {}
     for p in cat.parts:

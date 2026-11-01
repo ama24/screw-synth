@@ -17,6 +17,7 @@ from typing import Any
 import numpy as np
 import trimesh
 
+from screwsynth.catalogue.schema import LENGTH_KINDS
 from screwsynth.common.naming import KEYPOINTS
 
 GENERATOR_VERSION = "1"
@@ -27,6 +28,11 @@ SYMMETRY: dict[str, tuple[str | int, bool]] = {
     "button": ("continuous", False),
     "countersunk": ("continuous", False),
     "hex": (6, False),
+    "set_screw": ("continuous", False),
+    "threaded_rod": ("continuous", True),
+    "standoff_mf": (6, False),
+    "standoff_ff": (6, True),
+    "standoff_mm": (6, True),
     "hex_nut": (6, True),
     "nyloc_nut": (6, False),
     "washer": ("continuous", True),
@@ -138,7 +144,7 @@ def canonical_yaw(T: np.ndarray) -> np.ndarray:
 
 
 def category(kind: str, tilt_deg: float) -> str:
-    if kind == "screw":
+    if kind in LENGTH_KINDS:
         if tilt_deg < -60:
             return "standing_on_head"
         if tilt_deg > 60:
@@ -202,7 +208,7 @@ def compute_poses(mesh: trimesh.Trimesh, meta: Mapping[str, Any], settings: Sett
                 category=cat,
                 axis_tilt_deg=tilt,
                 keypoint_heights=heights,
-                measurable=kind == "screw" and abs(tilt) <= settings.measurable_tilt_deg,
+                measurable=kind in LENGTH_KINDS and abs(tilt) <= settings.measurable_tilt_deg,
                 merged=len(cl),
             )
         )

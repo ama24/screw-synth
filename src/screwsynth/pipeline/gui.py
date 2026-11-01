@@ -637,6 +637,7 @@ class BuilderPage:
             with ui.card().classes("w-full"):
                 summary = ui.label().classes("text-md font-bold").mark("parts-summary")
                 self.w.field("catalogue.max_length_mm", "Longest screw length (mm)")
+                self.w.field("catalogue.rod_max_length_mm", "Longest threaded rod piece (mm)")
                 ui.label(
                     "Changing the longest length changes which parts exist; reopen this tab to refresh the list."
                 ).classes("text-xs text-grey-7")

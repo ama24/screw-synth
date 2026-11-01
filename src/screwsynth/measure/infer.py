@@ -258,7 +258,7 @@ def measure_screw(
     }
     out["measurable"] = measurable
     out["cut_by_border"] = bool(cut)
-    if b is not None and b[1].shank_widths_px:
+    if b is not None and b[1].shank_widths_px and geo.kind == "screw":  # standoffs: hex body
         h_mid = geo.heights((geo.lengths or [10])[len(geo.lengths or [10]) // 2])["tip"]
         centre = kp_b["tip"] if kp_b else np.mean(det.polygon, axis=0)
         dia = thread_diameter_mm(b[1].shank_widths_px, scene.cam, centre, h_mid)

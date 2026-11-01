@@ -1,0 +1,109 @@
+{
+  "id": "STANDOFF_FF_M3x8",
+  "class_name": "STANDOFF_FF_M3",
+  "family": "STANDOFF_FF",
+  "kind": "standoff",
+  "shape": "standoff_ff",
+  "size": "M3",
+  "length": 8.0,
+  "pitch": 0.5,
+  "fully_threaded": null,
+  "dims": {
+    "s": 5.5,
+    "e": 6.2,
+    "ls": 6.0,
+    "lf": 5.0,
+    "d": 3.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black",
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": 8.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -8.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.75,
+    "tip": 2.75
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 7984,
+    "triangles": 15968,
+    "watertight": true,
+    "volume_mm3": 162.23652324290185,
+    "area_mm2": 296.9115470332818,
+    "bbox_min": [
+      -3.175426483154297,
+      -2.75,
+      -8.0
+    ],
+    "bbox_max": [
+      3.175426483154297,
+      2.75,
+      0.0
+    ],
+    "center_of_mass": [
+      -2.2191724327863505e-11,
+      -2.262274243466331e-11,
+      -3.999999999847131
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        15968
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 20
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "572fc3811befef29"
+}

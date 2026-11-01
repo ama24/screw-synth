@@ -1,0 +1,107 @@
+{
+  "id": "DIN975_M2x30",
+  "class_name": "DIN975_M2",
+  "family": "DIN975",
+  "kind": "screw",
+  "shape": "threaded_rod",
+  "size": "M2",
+  "length": 30.0,
+  "pitch": 0.4,
+  "fully_threaded": true,
+  "dims": {
+    "d": 2.0
+  },
+  "finishes": [
+    "zinc_clear",
+    "stainless_a2",
+    "stainless_a4",
+    "plain_steel"
+  ],
+  "nominal_length_mm": 30.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -30.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 1.0,
+    "tip": 1.0
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 36042,
+    "triangles": 72080,
+    "watertight": true,
+    "volume_mm3": 72.12478511711738,
+    "area_mm2": 279.46299884863123,
+    "bbox_min": [
+      -1.0,
+      -1.0,
+      -30.0
+    ],
+    "bbox_max": [
+      1.0,
+      1.0,
+      0.0
+    ],
+    "center_of_mass": [
+      -2.3150150604952274e-11,
+      1.7369415466307424e-10,
+      -14.999999999058375
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        72080
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 60
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {
+    "end_styles": [
+      "cut",
+      "cut"
+    ]
+  },
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "31b85a27c9f9421c"
+}

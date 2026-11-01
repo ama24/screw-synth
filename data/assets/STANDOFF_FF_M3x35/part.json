@@ -1,0 +1,109 @@
+{
+  "id": "STANDOFF_FF_M3x35",
+  "class_name": "STANDOFF_FF_M3",
+  "family": "STANDOFF_FF",
+  "kind": "standoff",
+  "shape": "standoff_ff",
+  "size": "M3",
+  "length": 35.0,
+  "pitch": 0.5,
+  "fully_threaded": null,
+  "dims": {
+    "s": 5.5,
+    "e": 6.2,
+    "ls": 6.0,
+    "lf": 5.0,
+    "d": 3.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black",
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": 35.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -35.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.75,
+    "tip": 2.75
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 9946,
+    "triangles": 19888,
+    "watertight": true,
+    "volume_mm3": 857.9639311218024,
+    "area_mm2": 850.0578797300174,
+    "bbox_min": [
+      -3.175426483154297,
+      -2.75,
+      -35.0
+    ],
+    "bbox_max": [
+      3.175426483154297,
+      2.75,
+      0.0
+    ],
+    "center_of_mass": [
+      -4.1964695571430664e-12,
+      -4.277911074579431e-12,
+      -17.500000003019952
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        19888
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 1,
+    "triangles": 20
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "505eedc1217ff5dc"
+}
