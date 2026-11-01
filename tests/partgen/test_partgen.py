@@ -352,3 +352,12 @@ def test_standoff_studs(catalogue, built):
             catalogue.part(pid).length + studs * d["ls"], abs=1e-3
         )
         assert len(b.collision) == 1 + studs
+
+
+def test_female_standoffs_are_threaded_through(catalogue, built):
+    """FF standoffs (the user's, 2026-11-01) and coupling nuts are tapped all the way through."""
+    part = catalogue.part("STANDOFF_FF_M5x30")
+    assert part.dims["through"] == 1
+    v = built["STANDOFF_FF_M5x30"].mesh.vertices
+    middle = v[np.abs(v[:, 2] + 15) < 1.0]  # halfway along the 30 mm body
+    assert np.hypot(middle[:, 0], middle[:, 1]).min() < 2.5  # the bore reaches the middle
