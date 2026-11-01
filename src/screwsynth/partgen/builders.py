@@ -639,6 +639,10 @@ def build_corner_bracket(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
     """Die-cast extrusion corner bracket: two legs at 90 deg, triangular side walls, a slotted
     hole and an alignment key (sits in the profile slot) under each leg.
 
+    Styles differ only in their dimensions: the key runs along the leg, or is a short tab of
+    key_len next to the corner; optional pockets (pocket_w x pocket_len, pocket_d deep) are cast
+    into the outer face along both side edges (the usual 2028-type bracket).
+
     Built with the corner at the origin, legs along +x (base) and +z (upright); the bracket is
     symmetric under swapping x and z, so the upright is the base mirrored in the plane x = z.
     """
@@ -651,12 +655,21 @@ def build_corner_bracket(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
         return Manifold.cube([x1 - x0, y1 - y0, z1 - z0]).translate([x0, y0, z0])
 
     swap = [1.0, 0.0, -1.0]  # mirror plane normal: x <-> z
-    leg = box(0, a, -w / 2, w / 2, 0, t) + box(t + 0.5, a - 0.5, -kw / 2, kw / 2, -kh, 0.01)
+    key_end = t + 0.5 + d["key_len"] if d.get("key_len") else a - 0.5
+    leg = box(0, a, -w / 2, w / 2, 0, t) + box(t + 0.5, key_end, -kw / 2, kw / 2, -kh, 0.01)
     xc = t + (a - t) / 2
     slot = _prism(_stadium(xc, d["dh"] / 2, d["slot"] / 2, n), -kh - 1, t + 1)
     tri = CrossSection([ccw([(0, 0), (a, 0), (0, a)])]).extrude(ts).rotate([90, 0, 0])
     sides = tri.translate([0, w / 2, 0]) + tri.translate([0, -w / 2 + ts, 0])
     body = leg + leg.mirror(swap) + sides - slot - slot.mirror(swap)
+    if d.get("pocket_w"):  # cast pockets in the outer face, along both side edges
+        pw, pl, pd = d["pocket_w"], d["pocket_len"], d["pocket_d"]
+        edge = 1.0  # rim left between the pocket and the side face
+        x0 = min(max(xc - pl / 2, t + 0.5), a - 0.5 - pl)
+        pockets = box(x0, x0 + pl, w / 2 - edge - pw, w / 2 - edge, -1.0, pd) + box(
+            x0, x0 + pl, -w / 2 + edge, -w / 2 + edge + pw, -1.0, pd
+        )
+        body = body - pockets - pockets.mirror(swap)
     body, shift = _centered(body)
 
     def box_hull(*b: float) -> trimesh.Trimesh:

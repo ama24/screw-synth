@@ -1,0 +1,108 @@
+{
+  "id": "BRACKET_3030_CAST",
+  "class_name": "BRACKET_3030",
+  "family": "BRACKET",
+  "kind": "bracket",
+  "shape": "corner_bracket",
+  "size": "3030",
+  "length": null,
+  "pitch": null,
+  "fully_threaded": null,
+  "dims": {
+    "a": 35.0,
+    "w": 30.0,
+    "t": 4.5,
+    "ts": 4.5,
+    "dh": 7.0,
+    "slot": 6.0,
+    "key_w": 7.8,
+    "key_h": 1.5,
+    "key_len": 6.0,
+    "pocket_w": 5.0,
+    "pocket_len": 18.0,
+    "pocket_d": 2.5
+  },
+  "finishes": [
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": null,
+  "nominal_length_mode": null,
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        18.25
+      ],
+      "labelled": false
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        -18.25
+      ],
+      "labelled": false
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": false
+    }
+  },
+  "axis_height_when_lying": null,
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 226,
+    "triangles": 456,
+    "watertight": true,
+    "volume_mm3": 10402.760661637027,
+    "area_mm2": 6531.877715018401,
+    "bbox_min": [
+      -18.25,
+      -15.0,
+      -18.25
+    ],
+    "bbox_max": [
+      18.25,
+      15.0,
+      18.25
+    ],
+    "center_of_mass": [
+      -5.683678666720397,
+      2.9689161610342667e-16,
+      -5.683678666720396
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        456
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 4,
+    "triangles": 40
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "c7f9cf2fbbd5d00d"
+}

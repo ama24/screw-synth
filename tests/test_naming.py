@@ -145,6 +145,10 @@ def test_profile_parts_and_multiword_families():
     from screwsynth.common.naming import profile_id
 
     assert profile_id("BRACKET", 2020) == "BRACKET_2020"
+    assert profile_id("BRACKET", 2020, "cast") == "BRACKET_2020_CAST"
+    styled = parse_part_id("BRACKET_2020_CAST")
+    assert (styled.style, styled.size, styled.class_name) == ("CAST", "2020", "BRACKET_2020")
+    assert styled.part_id == "BRACKET_2020_CAST"
     p = parse_part_id("BRACKET_3030")
     assert (p.family, p.size, p.profile, p.class_name) == (
         "BRACKET",

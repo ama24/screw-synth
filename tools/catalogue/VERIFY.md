@@ -51,6 +51,8 @@ catalogues.
 | STANDOFF_* (all) | all dims | **Not standardised.** Vendor-typical: across flats 4/5/5.5/7/8/10 for M2–M6, male stud about 1–1.7 × d, female thread depth about 1.5 × d. Brass M3 standoffs come with s = 5 or 5.5. Measure yours. |
 | STANDOFF_FF (all) | `through` | Threaded all the way through, like the user's own FF standoffs (2026-11-01). Hex coupling nuts (DIN 6334) look the same from above and are sorted into this class. |
 | STANDOFF_* (all) | `lengths` | Common vendor lengths (body only, studs excluded). |
+| BRACKET `cast` 2020 | all dims | From a vendor drawing (28 × 28 × 20 mm, 3.5 mm walls, 6 × 11 mm hole, 5 mm tabs). Pocket sizes estimated from the photo. |
+| BRACKET `cast` 3030, 4040 | all dims | Scaled from the 2020 cast bracket. Measure yours. |
 | BRACKET (all) | all dims | **Not standardised.** Die-cast bracket shape guessed from typical 2020/3030/4040 parts: legs 20/28/36 mm, slotted hole, triangular side walls, alignment key. Measure yours. |
 | All screws | `common` / `uncommon` | My guess at what is uncommon in the trade (mostly lengths 45, 55 and 65, and very long button heads). |
 | All families | `finishes` | Typical availability, not a hard rule. Example: nylon is listed only for small DIN 912/933/934/125 sizes. |

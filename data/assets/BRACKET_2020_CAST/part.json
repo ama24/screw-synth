@@ -1,22 +1,26 @@
 {
-  "id": "BRACKET_4040",
-  "class_name": "BRACKET_4040",
+  "id": "BRACKET_2020_CAST",
+  "class_name": "BRACKET_2020",
   "family": "BRACKET",
   "kind": "bracket",
   "shape": "corner_bracket",
-  "size": "4040",
+  "size": "2020",
   "length": null,
   "pitch": null,
   "fully_threaded": null,
   "dims": {
-    "a": 36.0,
-    "w": 36.0,
-    "t": 5.0,
-    "ts": 3.0,
-    "dh": 8.5,
-    "slot": 3.0,
-    "key_w": 8.0,
-    "key_h": 2.0
+    "a": 28.0,
+    "w": 20.0,
+    "t": 3.5,
+    "ts": 3.5,
+    "dh": 6.0,
+    "slot": 5.0,
+    "key_w": 5.8,
+    "key_h": 1.2,
+    "key_len": 5.0,
+    "pocket_w": 3.0,
+    "pocket_len": 14.0,
+    "pocket_d": 2.0
   },
   "finishes": [
     "aluminium",
@@ -29,7 +33,7 @@
       "xyz": [
         0.0,
         0.0,
-        19.0
+        14.6
       ],
       "labelled": false
     },
@@ -37,7 +41,7 @@
       "xyz": [
         0.0,
         0.0,
-        -19.0
+        -14.6
       ],
       "labelled": false
     },
@@ -55,30 +59,30 @@
   "units": "mm",
   "mesh": {
     "file": "render.ply",
-    "vertices": 199,
-    "triangles": 402,
+    "vertices": 228,
+    "triangles": 460,
     "watertight": true,
-    "volume_mm3": 13911.186748619859,
-    "area_mm2": 7455.588279446634,
+    "volume_mm3": 4545.448982192826,
+    "area_mm2": 3696.592443616103,
     "bbox_min": [
-      -19.0,
-      -18.0,
-      -19.0
+      -14.600000381469727,
+      -10.0,
+      -14.600000381469727
     ],
     "bbox_max": [
-      19.0,
-      18.0,
-      19.0
+      14.600000381469727,
+      10.0,
+      14.600000381469727
     ],
     "center_of_mass": [
-      -5.847166365934581,
-      -6.020284631472292e-16,
-      -5.847166365934581
+      -4.494141558273331,
+      -5.27318094359314e-16,
+      -4.494141558273331
     ],
     "material_slots": {
       "body": [
         0,
-        402
+        460
       ]
     }
   },
@@ -100,5 +104,5 @@
     "axial_per_pitch": 12,
     "round_segments": 64
   },
-  "catalogue_hash": "d7c2bb081899305b"
+  "catalogue_hash": "5ece9b5b096b8ed4"
 }

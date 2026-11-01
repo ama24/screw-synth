@@ -90,7 +90,9 @@ tip when the screw lies on its side. Tool 04 computes the exact values per rest 
   way through (`through: 1`, the catalogue default; without it only short ones are, longer ones get an `lf` deep
   blind hole at each end). MF standoffs are tapped `lf` deep and keep a wall to their stud.
 - **Corner brackets:** two legs (a × w × t) at 90°, triangular side walls (ts), a slotted hole (dh, slot) and an
-  alignment key (key_w × key_h) under each leg. The bracket is built once and mirrored in the plane x = z.
+  alignment key (key_w × key_h) under each leg: along the whole leg, or a short tab of `key_len` next to the
+  corner. Optional pockets (`pocket_w` × `pocket_len`, `pocket_d` deep) in the outer face along both side edges.
+  The bracket is built once and mirrored in the plane x = z.
 - **DIN 934 nuts:** double-chamfered hex.
 - **DIN 985 nuts:** hex plus a rounded collar, with the nylon insert ring as a separate slot.
 - **Washers:** annulus with rounded edges.

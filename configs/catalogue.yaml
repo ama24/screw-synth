@@ -527,7 +527,11 @@ families:
   # Die-cast aluminium angle brackets for 2020/3030/4040 profiles: two legs with a slotted hole,
   # triangular side walls, and an alignment key under each leg that sits in the profile slot.
   # a leg length, w width, t leg thickness, ts side-wall thickness, dh hole diameter,
-  # slot hole elongation, key_w/key_h alignment key width/height
+  # slot hole elongation, key_w/key_h alignment key width/height, key_len short key (tab) length
+  # (omitted = along the whole leg), pocket_w/pocket_len/pocket_d pockets cast into the outer face.
+  # Styles are look-alike variants of the same class (one part each, BRACKET_2020_CAST, class
+  # BRACKET_2020): keyed = compact bracket with a full-length key; cast = the common "2028" type
+  # (28 mm legs, 3.5 mm walls, 6 x 11 mm hole, pockets, short tabs), 2020 from a vendor drawing.
   BRACKET:
     title: Corner bracket for aluminium extrusion
     standard: none (vendor-typical)
@@ -540,9 +544,21 @@ families:
       aluminium: all
       aluminium_black: all
     sizes:
-      "2020": {dims: {a: 20.0, w: 20.0, t: 3.0, ts: 2.0, dh: 5.5, slot: 2.0, key_w: 6.0, key_h: 1.2}}
-      "3030": {dims: {a: 28.0, w: 28.0, t: 4.0, ts: 2.5, dh: 6.5, slot: 3.0, key_w: 8.0, key_h: 1.5}}
-      "4040": {dims: {a: 36.0, w: 36.0, t: 5.0, ts: 3.0, dh: 8.5, slot: 3.0, key_w: 8.0, key_h: 2.0}}
+      "2020":
+        dims: {a: 20.0, w: 20.0, t: 3.0, ts: 2.0, dh: 5.5, slot: 2.0, key_w: 6.0, key_h: 1.2}
+        styles:
+          keyed: {}
+          cast: {a: 28.0, t: 3.5, ts: 3.5, dh: 6.0, slot: 5.0, key_w: 5.8, key_len: 5.0, pocket_w: 3.0, pocket_len: 14.0, pocket_d: 2.0}
+      "3030":
+        dims: {a: 28.0, w: 28.0, t: 4.0, ts: 2.5, dh: 6.5, slot: 3.0, key_w: 8.0, key_h: 1.5}
+        styles:
+          keyed: {}
+          cast: {a: 35.0, w: 30.0, t: 4.5, ts: 4.5, dh: 7.0, slot: 6.0, key_w: 7.8, key_len: 6.0, pocket_w: 5.0, pocket_len: 18.0, pocket_d: 2.5}
+      "4040":
+        dims: {a: 36.0, w: 36.0, t: 5.0, ts: 3.0, dh: 8.5, slot: 3.0, key_w: 8.0, key_h: 2.0}
+        styles:
+          keyed: {}
+          cast: {a: 40.0, w: 40.0, t: 5.0, ts: 5.0, dh: 9.0, slot: 6.0, key_w: 7.8, key_len: 7.0, pocket_w: 7.0, pocket_len: 20.0, pocket_d: 3.0}
 
 # ---------------------------------------------------------------- unknown (rejected) parts
 # Things that are not in the catalogue but end up on the plate anyway (wood screws, lock washers,

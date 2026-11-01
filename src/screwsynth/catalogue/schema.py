@@ -116,6 +116,7 @@ _SIZE_KEYS = {
     "common",
     "verified",
     "step",
+    "styles",
 }
 DEFAULT_CUT_MAX_LENGTH_MM = 80.0  # cut-to-length families when no maximum is configured
 _TNUT_KEY_RE = re.compile(r"^S(?P<slot>[1-9]\d*)_(?P<size>M\d+(?:\.\d+)?)$")
@@ -149,6 +150,8 @@ class SizeSpec:
     slot: int | None = None
     step: dict[str, Any] | None = None
     min_length: float | None = None  # cut-to-length families: shortest piece
+    # profile parts: look-alike variants of the class, style -> dimension overrides (one part each)
+    styles: dict[str, dict[str, float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -198,6 +201,7 @@ class Part:
     step: Mapping[str, Any] | None = None
     size_key: str = ""
     cut_to_length: bool = False  # any length (threaded rod): measured, rounded to 1 mm
+    style: str | None = None  # profile parts: variant within the class (BRACKET_2020_CAST)
 
     @property
     def fully_threaded(self) -> bool | None:
@@ -233,6 +237,7 @@ class Part:
             "tnut_kind": self.tnut_kind,
             "step": dict(self.step) if self.step is not None else None,
             "cut_to_length": self.cut_to_length,
+            "style": self.style,
         }
 
     @property
@@ -386,6 +391,12 @@ def _parse_size(
         dims.setdefault("ds", dims["d"])
     pitch = raw.get("pitch")
     min_length = raw.get("min_length")
+    styles: dict[str, dict[str, float]] = {}
+    for name, over in _expect(raw.get("styles", {}) or {}, Mapping, f"{where}.styles").items():
+        if fam_kind not in PROFILE_KINDS:
+            raise CatalogueError(f"{where}.styles: only profile parts (brackets) have styles")
+        over = _expect(over or {}, Mapping, f"{where}.styles.{name}")
+        styles[str(name)] = {str(k): _num(v, f"{where}.styles.{name}.{k}") for k, v in over.items()}
     step = raw.get("step")
     if step is not None:
         step = dict(_expect(step, Mapping, f"{where}.step"))
@@ -402,6 +413,7 @@ def _parse_size(
         slot=slot,
         step=step,
         min_length=None if min_length is None else _num(min_length, f"{where}.min_length"),
+        styles=styles,
     )
 
 
@@ -593,13 +605,14 @@ def catalogue_from_config(cfg: Any, path: str | os.PathLike[str] | None = None) 
 # ----------------------------------------------------------------------------------- expansion
 
 
-def _part_ids(fam: Family, spec: SizeSpec, length: float | None) -> tuple[str, str]:
+def _part_ids(
+    fam: Family, spec: SizeSpec, length: float | None, style: str | None = None
+) -> tuple[str, str]:
     if fam.kind == "tnut":
         pid = tnut_id(fam.tnut_kind or "", spec.slot or 0, spec.size)
         return pid, pid
     if fam.kind in PROFILE_KINDS:
-        pid = profile_id(fam.name, spec.key)
-        return pid, pid
+        return profile_id(fam.name, spec.key, style), profile_id(fam.name, spec.key)
     cname = plain_id(fam.name, spec.size)
     if length is None:
         return cname, cname
@@ -620,8 +633,9 @@ def expand(cat: Catalogue) -> list[Part]:
             else:
                 lengths = [None]
             base_enabled = fam.enabled and (spec.enabled if spec.enabled is not None else True)
-            for length in lengths:
-                pid, cname = _part_ids(fam, spec, length)
+            styles: list[str | None] = list(spec.styles) or [None]
+            for length, style in ((L, st) for L in lengths for st in styles):
+                pid, cname = _part_ids(fam, spec, length, style)
                 part = Part(
                     id=pid,
                     class_name=cname,
@@ -635,7 +649,7 @@ def expand(cat: Catalogue) -> list[Part]:
                     enabled=base_enabled,
                     common=spec.common and (length is None or length not in spec.uncommon),
                     finishes=fam.finishes_for(spec.key),
-                    dims=dict(spec.dims),
+                    dims={**spec.dims, **(spec.styles.get(style, {}) if style else {})},
                     dims_source=fam.dims_source,
                     verified=spec.verified if spec.verified is not None else fam.verified,
                     source=fam.source,
@@ -645,6 +659,7 @@ def expand(cat: Catalogue) -> list[Part]:
                     step=_step_for(spec, length),
                     size_key=spec.key,
                     cut_to_length=bool(fam.length_step),
+                    style=style,
                 )
                 for rule in cat.rules:
                     if rule.matches(part):

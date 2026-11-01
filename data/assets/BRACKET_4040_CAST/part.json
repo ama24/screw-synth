@@ -1,0 +1,108 @@
+{
+  "id": "BRACKET_4040_CAST",
+  "class_name": "BRACKET_4040",
+  "family": "BRACKET",
+  "kind": "bracket",
+  "shape": "corner_bracket",
+  "size": "4040",
+  "length": null,
+  "pitch": null,
+  "fully_threaded": null,
+  "dims": {
+    "a": 40.0,
+    "w": 40.0,
+    "t": 5.0,
+    "ts": 5.0,
+    "dh": 9.0,
+    "slot": 6.0,
+    "key_w": 7.8,
+    "key_h": 2.0,
+    "key_len": 7.0,
+    "pocket_w": 7.0,
+    "pocket_len": 20.0,
+    "pocket_d": 3.0
+  },
+  "finishes": [
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": null,
+  "nominal_length_mode": null,
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        21.0
+      ],
+      "labelled": false
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        -21.0
+      ],
+      "labelled": false
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": false
+    }
+  },
+  "axis_height_when_lying": null,
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 228,
+    "triangles": 460,
+    "watertight": true,
+    "volume_mm3": 16866.307362135285,
+    "area_mm2": 9474.11637707648,
+    "bbox_min": [
+      -21.0,
+      -20.0,
+      -21.0
+    ],
+    "bbox_max": [
+      21.0,
+      20.0,
+      21.0
+    ],
+    "center_of_mass": [
+      -6.486149907890651,
+      -4.943011287087305e-16,
+      -6.486149907890653
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        460
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 4,
+    "triangles": 40
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "dea3337f6f9099fc"
+}

@@ -33,7 +33,9 @@ the tool you are working on before changing it.
   5 mm steps, and measured lengths are rounded to 1 mm instead of snapped to standard lengths.
 - Hex standoffs, one class per type and size: STANDOFF_MF / _FF / _MM (male-female,
   female-female, male-male), M2-M6, length measured (the hex body).
-- Corner brackets for aluminium extrusion: BRACKET_2020, BRACKET_3030, BRACKET_4040 (not measured).
+- Corner brackets for aluminium extrusion: classes BRACKET_2020, BRACKET_3030, BRACKET_4040 (not
+  measured), each in two looks (styles): keyed (compact, full-length key) and cast (the common
+  "2028" die-cast bracket with pockets and short tabs).
 - Nuts, washers, slide-in T-nuts and drop-in T-nuts (for aluminium extrusion slots).
 - UNKNOWN: one class for everything else that ends up on the plate (wood screws, lock washers,
   pins, sheet-metal brackets, plates, odd bits), so the machine can reject it. Generated
@@ -92,7 +94,8 @@ Every tool reads the catalogue through `catalogue_from_config()`, so `catalogue.
   listed in meta.json.
 - Part id: `<FAMILY>_<SIZE>x<LENGTH>` for screws and standoffs (DIN912_M4x16, STANDOFF_MF_M3x10),
   `<FAMILY>_<SIZE>` for nuts/washers (DIN934_M4, DIN125A_M4), `TNUT_<SLIDE|DROP>_S<slot>_<SIZE>`
-  for T-nuts (TNUT_DROP_S6_M4), `<FAMILY>_<PROFILE>` for extrusion parts (BRACKET_2020),
+  for T-nuts (TNUT_DROP_S6_M4), `<FAMILY>_<PROFILE>_<STYLE>` for extrusion parts (BRACKET_2020_CAST,
+  class BRACKET_2020; styles are look-alike variants of one class),
   `UNKNOWN_<TYPE>_<NN>` for unknown parts (UNKNOWN_WOODSCREW_03, class UNKNOWN). Family names may
   have "_"-joined words; the prefixes TNUT_ and UNKNOWN_ are reserved.
   Use `screwsynth.common.naming`.
