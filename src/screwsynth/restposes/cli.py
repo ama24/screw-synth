@@ -14,7 +14,7 @@ import numpy as np
 import trimesh
 from PIL import Image, ImageDraw
 
-from screwsynth.catalogue.schema import catalogue_from_config
+from screwsynth.catalogue.schema import LENGTH_KINDS, catalogue_from_config
 from screwsynth.common.config import load_config
 from screwsynth.common.io import read_json, write_json
 from screwsynth.common.log import setup_logging
@@ -173,7 +173,7 @@ def _family_rows(ctx: _Ctx) -> list[tuple]:
                 f"{np.mean(n_poses):.1f}",
                 f"{top} {cats[top]:.2f}",
                 f"{min(tilts):.1f}..{max(tilts):.1f}",
-                f"{meas:.2f}" if docs[0]["kind"] == "screw" else "-",
+                f"{meas:.2f}" if docs[0]["kind"] in LENGTH_KINDS else "-",
             )
         )
     return rows

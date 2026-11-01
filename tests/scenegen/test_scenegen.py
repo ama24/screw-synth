@@ -323,7 +323,7 @@ def test_materials_sampled_in_range():
     override = sample_material("brass", {"brass": {"base_color": [1, 0, 0], "roughness": 0.5}}, rng)
     assert override["roughness"] == 0.5 and override["base_color"][0] > 0.9
     with pytest.raises(KeyError):
-        sample_material("aluminium", None, rng)
+        sample_material("anodised_red", None, rng)
 
 
 def test_generate_script_imports_blenderproc_first():

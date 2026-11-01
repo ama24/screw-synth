@@ -57,9 +57,13 @@ tip when the screw lies on its side. Tool 04 computes the exact values per rest 
   - Keypoints: `head_top` = (0, 0, k), `bearing` = (0, 0, 0), `tip` = (0, 0, -L).
 - **Countersunk (DIN 7991):** z = 0 is where the cone meets the shank, and `head_top` is the top face at z = k.
   The nominal length includes the head, so `tip` = (0, 0, k - L) and head_top-to-tip = L.
-- **Hex heads and nuts:** the corners lie on ±x and the flats face ±y, so across flats = 2·max|y|.
-- **Nuts, washers and T-nuts:** centred on the origin (bounding-box centre), with the bore along z. Their keypoints
-  are placeholders with `labelled: false`.
+- **Set screws (DIN 913) and threaded rod (DIN 975):** no head. The rod runs from z = -L (`tip`) to z = 0
+  (`head_top` = `bearing`, the socket end of a set screw); the nominal length is the overall length.
+- **Standoffs:** the hex body runs from z = -L (`tip`) to z = 0 (`head_top` = `bearing`, the female end of an MF);
+  male studs (ls) come on top of that, below -L and/or above 0.
+- **Hex heads, nuts and standoffs:** the corners lie on ±x and the flats face ±y, so across flats = 2·max|y|.
+- **Nuts, washers, T-nuts and corner brackets:** centred on the origin (bounding-box centre), with the bore along
+  z. Their keypoints are placeholders with `labelled: false`.
 - **T-nuts:** length runs along x (the slot direction), width along y, and the neck points to +z.
 
 ## Geometry
@@ -79,6 +83,12 @@ tip when the screw lies on its side. Tool 04 computes the exact values per rest 
   - DIN 933: hex prism with a 30° top chamfer and a washer face (dw, c).
   - ISO 7380: dome with a flat top ring and a hex socket.
   - DIN 7991: 90° cone with a hex socket.
+- **DIN 913 / DIN 975:** fully threaded, 45° chamfer at both ends; DIN 913 has a hex socket (with drill point)
+  in the z = 0 end.
+- **Standoffs:** double-chamfered hex body; female ends are tapped `lf` deep (short FF standoffs are tapped
+  through, and an MF keeps a wall to its stud); male studs are threaded and chamfered.
+- **Corner brackets:** two legs (a × w × t) at 90°, triangular side walls (ts), a slotted hole (dh, slot) and an
+  alignment key (key_w × key_h) under each leg. The bracket is built once and mirrored in the plane x = z.
 - **DIN 934 nuts:** double-chamfered hex.
 - **DIN 985 nuts:** hex plus a rounded collar, with the nylon insert ring as a separate slot.
 - **Washers:** annulus with rounded edges.
@@ -123,12 +133,12 @@ Dimension checks are skipped for STEP parts. Mesh validity, keypoints and collis
 The junk shapes (catalogue `unknown:` section, class `UNKNOWN`) are built in
 `src/screwsynth/partgen/unknown.py`:
 - **wood screw:** countersunk or pan head with a cross recess, coarse thread and a pointed tip;
-- **threaded rod piece;**
+- **threaded rod piece** (not in the shipped catalogue: DIN975 is a class now);
 - **split lock washer:** cut and twisted;
 - **toothed lock washer;**
 - **pin:** chamfered;
 - **angle bracket:** with holes;
-- **hex standoff;**
+- **hex standoff** (not in the shipped catalogue: the STANDOFF families are classes now);
 - **plate with holes;**
 - **blob:** two random convex lumps.
 

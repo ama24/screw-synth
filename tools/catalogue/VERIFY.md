@@ -45,6 +45,12 @@ catalogues.
 | TNUT_SLIDE (all) | all dims | **Not standardised.** Vendor-typical values (`dims_source: vendor-typical, measure your own`). 2020 profiles: 10x10 mm body, 4 mm high. 3030/4040: 12x15 mm, 6 mm high. Measure your own. |
 | TNUT_DROP (all) | all dims | **Not standardised.** Hammer-head shape: 11x6 mm (slot 6), 16x8 mm (slot 8). Roll-in nuts with a spring ball look different, so add a separate family if you use them. |
 | T-nuts (all) | `pitch` | Coarse pitch was assumed. Correct as long as the thread is standard metric coarse. |
+| DIN 913 (all sizes) | `s`, `t` | ISO 4026 socket sizes (s nominal) and depths (t min, for the longer lengths). Recalled values; short set screws have shallower sockets. |
+| DIN 913 (all sizes) | `lengths` | Deliberately cut at about 3 × d so they never overlap with DIN 975 (see README). Longer set screws exist; adding them breaks that gap. |
+| DIN 975 (all sizes) | `lengths` | Cut pieces have any length. The list is only what gets rendered and what measurements snap to. |
+| STANDOFF_* (all) | all dims | **Not standardised.** Vendor-typical: across flats 4/5/5.5/7/8/10 for M2–M6, male stud about 1–1.7 × d, female thread depth about 1.5 × d. Brass M3 standoffs come with s = 5 or 5.5. Measure yours. |
+| STANDOFF_* (all) | `lengths` | Common vendor lengths (body only, studs excluded). |
+| BRACKET (all) | all dims | **Not standardised.** Die-cast bracket shape guessed from typical 2020/3030/4040 parts: legs 20/28/36 mm, slotted hole, triangular side walls, alignment key. Measure yours. |
 | All screws | `common` / `uncommon` | My guess at what is uncommon in the trade (mostly lengths 45, 55 and 65, and very long button heads). |
 | All families | `finishes` | Typical availability, not a hard rule. Example: nylon is listed only for small DIN 912/933/934/125 sizes. |
 

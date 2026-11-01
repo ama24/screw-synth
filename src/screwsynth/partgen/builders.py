@@ -3,8 +3,9 @@ keypoints and convex collision pieces, all in the part's local frame (mm).
 
 Local frame: screws have their axis along +z with the bearing face (underside of the head) at
 z = 0, head towards +z and tip towards -z. For countersunk screws z = 0 is where the cone meets
-the shank and head_top is the top face at z = k. Nuts, washers and T-nuts are centred on the origin
-with their bore along z.
+the shank and head_top is the top face at z = k. Headless parts (set screws, threaded rod) and
+standoffs run from z = -L (tip) to z = 0 (head_top = bearing); standoff studs come on top of that.
+Nuts, washers, T-nuts and brackets are centred on the origin (bores along z).
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ import numpy as np
 import trimesh
 from manifold3d import CrossSection, Manifold, Mesh
 
-from screwsynth.catalogue.schema import Part
+from screwsynth.catalogue.schema import LENGTH_KINDS, Part
 
 from .profiles import (
     CREST,
@@ -289,6 +290,132 @@ def build_hex(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
     return _screw_result(part, body, k, -L, proxy, coll_n, s / 2)
 
 
+# ------------------------------------------------------------------ headless (set screw, rod)
+
+
+def _end_chamfer(R: float, r_end: float, z_end: float, z_far: float, segs: int) -> Manifold:
+    """Solid to intersect with: a 45 deg chamfer from r_end at z_end, open towards z_far < z_end."""
+    rise = R + 1.0 - r_end
+    return _revolve(
+        [(0, z_far), (R + 1.0, z_far), (R + 1.0, z_end - rise), (r_end, z_end), (0, z_end)], segs
+    )
+
+
+def _headless(part: Part, lod: Lod, coll_n: int, socket: bool) -> BuiltPart:
+    """Fully threaded rod from z = -L (tip) to z = 0 (head_top), chamfered at both ends.
+
+    Set screws (DIN 913) have a hexagon socket at z = 0; threaded rod has none. With no head the
+    nominal length is the overall length, so head_top and bearing are the same point.
+    """
+    d = part.dims
+    L, p = part.length or 0.0, part.pitch or 0.0
+    R = d["d"] / 2
+    depth = EXT_DEPTH * p
+    r_end = R - 1.05 * depth  # chamfer from just below the thread root, as on the screw tips
+    spec = RodSpec(
+        radius=R,
+        pitch=p,
+        z0=-L,
+        z1=0.3,
+        depth=depth,
+        crest=CREST,
+        root=EXT_ROOT,
+        tip_radius=r_end,
+        tip_slope=1.0,
+    )
+    body = _rod(spec, lod) ^ _end_chamfer(R, r_end, 0.0, -L - 1.0, lod.round_segments)
+    if socket:
+        body = body - _socket(d["s"], d["t"], 0.0)
+    mesh, slots = _to_trimesh(body)
+    return BuiltPart(
+        mesh=mesh,
+        slots=slots,
+        keypoints={"head_top": [0.0, 0.0, 0.0], "bearing": [0.0, 0.0, 0.0], "tip": [0.0, 0.0, -L]},
+        labelled=True,
+        collision=[_hull(_cyl_points(R, -L, 0.0, coll_n))],
+        info={"axis_height_when_lying": {"head": R, "tip": R}},
+    )
+
+
+def build_set_screw(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
+    return _headless(part, lod, coll_n, socket=True)
+
+
+def build_threaded_rod(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
+    return _headless(part, lod, coll_n, socket=False)
+
+
+# ------------------------------------------------------------------------------- hex standoffs
+
+
+def _stud(part: Part, lod: Lod, z_body: float, up: bool) -> Manifold:
+    """Male thread of length ls leaving the body face at z_body, upwards or downwards."""
+    d = part.dims
+    p = part.pitch or 0.0
+    R, ls = d["d"] / 2, d["ls"]
+    depth = EXT_DEPTH * p
+    spec = RodSpec(
+        radius=R,
+        pitch=p,
+        z0=-ls,
+        z1=0.3,
+        depth=depth,
+        crest=CREST,
+        root=EXT_ROOT,
+        thread_end=-0.5 * p,
+        runout=p,
+        tip_radius=R - 1.05 * depth,
+        tip_slope=1.0,
+    )
+    stud = _rod(spec, lod)  # from -ls (chamfered end) to the body face at 0
+    if up:
+        stud = stud.rotate([180, 0, 0])  # z -> -z: from the body face up to +ls
+    return stud.translate([0, 0, z_body])
+
+
+def _standoff(part: Part, lod: Lod, coll_n: int, top: str, bottom: str) -> BuiltPart:
+    """Hex body from z = -L to 0 (the nominal length); each end is "male" (stud) or "female"."""
+    d = part.dims
+    L, s, segs = part.length or 0.0, d["s"], lod.round_segments
+    R = d["d"] / 2
+    body = _prism(hexagon(s), -L, 0.0) ^ _double_chamfer(s, -L, 0.0, segs)
+    pieces = [_hull(np.vstack([np.c_[hexagon(s), np.full(6, -L)], np.c_[hexagon(s), np.zeros(6)]]))]
+    if top == "female" and bottom == "female" and 2 * d["lf"] >= L - 0.6:
+        body = body - _tap(part, -L - 0.5, 0.5, lod)  # short: tapped through
+    else:
+        lf = min(d.get("lf", 0.0), L - 0.5)  # leave a wall when a stud is on the other side
+        if top == "female":
+            body = body - _tap(part, -lf, 0.5, lod)
+        if bottom == "female":
+            body = body - _tap(part, -L - 0.5, -L + lf, lod)
+    for end, z, up in ((top, 0.0, True), (bottom, -L, False)):
+        if end == "male":
+            body = body + _stud(part, lod, z, up)
+            z0, z1 = (z, z + d["ls"]) if up else (z - d["ls"], z)
+            pieces.append(_hull(_cyl_points(R, z0, z1, coll_n)))
+    mesh, slots = _to_trimesh(body)
+    return BuiltPart(
+        mesh=mesh,
+        slots=slots,
+        keypoints={"head_top": [0.0, 0.0, 0.0], "bearing": [0.0, 0.0, 0.0], "tip": [0.0, 0.0, -L]},
+        labelled=True,
+        collision=pieces,
+        info={"axis_height_when_lying": {"head": s / 2, "tip": s / 2}},
+    )
+
+
+def build_standoff_mf(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
+    return _standoff(part, lod, coll_n, top="female", bottom="male")
+
+
+def build_standoff_ff(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
+    return _standoff(part, lod, coll_n, top="female", bottom="female")
+
+
+def build_standoff_mm(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
+    return _standoff(part, lod, coll_n, top="male", bottom="male")
+
+
 # --------------------------------------------------------------------------------- nuts etc.
 
 
@@ -485,11 +612,61 @@ def build_tnut_drop(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
     return _simple_result(body, [directional_hull(mesh_pts)])
 
 
+def _stadium(cx: float, r: float, half_len: float, n: int) -> np.ndarray:
+    """Slot outline in the xy plane: two half circles of radius r, centres cx -/+ half_len."""
+    right = arc((cx + half_len, 0.0), r, -90, 90, n)
+    left = arc((cx - half_len, 0.0), r, 90, 270, n)
+    return np.array(right + left)
+
+
+def build_corner_bracket(part: Part, lod: Lod, coll_n: int) -> BuiltPart:
+    """Die-cast extrusion corner bracket: two legs at 90 deg, triangular side walls, a slotted
+    hole and an alignment key (sits in the profile slot) under each leg.
+
+    Built with the corner at the origin, legs along +x (base) and +z (upright); the bracket is
+    symmetric under swapping x and z, so the upright is the base mirrored in the plane x = z.
+    """
+    d = part.dims
+    a, w, t, ts = d["a"], d["w"], d["t"], d["ts"]
+    kw, kh = d["key_w"], d["key_h"]
+    n = max(6, lod.round_segments // 4)
+
+    def box(x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> Manifold:
+        return Manifold.cube([x1 - x0, y1 - y0, z1 - z0]).translate([x0, y0, z0])
+
+    swap = [1.0, 0.0, -1.0]  # mirror plane normal: x <-> z
+    leg = box(0, a, -w / 2, w / 2, 0, t) + box(t + 0.5, a - 0.5, -kw / 2, kw / 2, -kh, 0.01)
+    xc = t + (a - t) / 2
+    slot = _prism(_stadium(xc, d["dh"] / 2, d["slot"] / 2, n), -kh - 1, t + 1)
+    tri = CrossSection([ccw([(0, 0), (a, 0), (0, a)])]).extrude(ts).rotate([90, 0, 0])
+    sides = tri.translate([0, w / 2, 0]) + tri.translate([0, -w / 2 + ts, 0])
+    body = leg + leg.mirror(swap) + sides - slot - slot.mirror(swap)
+    body, shift = _centered(body)
+
+    def box_hull(*b: float) -> trimesh.Trimesh:
+        x0, x1, y0, y1, z0, z1 = b
+        return _hull(np.array([[x, y, z] for x in (x0, x1) for y in (y0, y1) for z in (z0, z1)]))
+
+    base = box_hull(0, a, -w / 2, w / 2, -kh, t)
+    upright = box_hull(-kh, t, -w / 2, w / 2, 0, a)
+    walls = [
+        _hull(np.array([[x, y, z] for x, z in ((0, 0), (a, 0), (0, a)) for y in (y0, y0 + ts)]))
+        for y0 in (w / 2 - ts, -w / 2)
+    ]
+    return _simple_result(body, [base, upright, *walls], shift=shift)
+
+
 BUILDERS: dict[str, Callable[[Part, Lod, int], BuiltPart]] = {
     "socket_cap": build_socket_cap,
     "hex": build_hex,
     "button": build_button,
     "countersunk": build_countersunk,
+    "set_screw": build_set_screw,
+    "threaded_rod": build_threaded_rod,
+    "standoff_mf": build_standoff_mf,
+    "standoff_ff": build_standoff_ff,
+    "standoff_mm": build_standoff_mm,
+    "corner_bracket": build_corner_bracket,
     "hex_nut": build_hex_nut,
     "nyloc_nut": build_nyloc_nut,
     "washer": build_washer,
@@ -512,6 +689,8 @@ def build(part: Part, lod: Lod, coll_n: int = 16, max_triangles: int = 200_000) 
         return UNKNOWN_BUILDERS[part.shape](part, lod, coll_n)
     if part.shape not in BUILDERS:
         raise BuildError(f"no builder for shape {part.shape!r}")
-    if part.kind == "screw":
-        lod = _thread_lod(part, lod, max_triangles, (part.length or 0) + part.dims.get("k", 0))
+    if part.kind in LENGTH_KINDS:
+        d = part.dims
+        threaded = (part.length or 0) + d.get("k", 0) + 2 * d.get("ls", 0) + 2 * d.get("lf", 0)
+        lod = _thread_lod(part, lod, max_triangles, threaded)
     return BUILDERS[part.shape](part, lod, coll_n)

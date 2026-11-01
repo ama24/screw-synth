@@ -79,6 +79,22 @@ DEFAULT_PRESETS: dict[str, dict[str, Any]] = {
         "metallic": 0.0,
         "roughness": [0.3, 0.55],
     },
+    # die-cast / machined aluminium (corner brackets, standoffs): satin, slightly brushed
+    "aluminium": {
+        "base_color": [0.91, 0.92, 0.93],
+        "value_jitter": 0.05,
+        "metallic": 1.0,
+        "roughness": [0.3, 0.55],
+        "anisotropic": [0.0, 0.3],
+    },
+    # black anodised aluminium: a dark oxide layer over the metal, satin sheen
+    "aluminium_black": {
+        "base_color": [0.03, 0.03, 0.035],
+        "value_jitter": 0.3,
+        "metallic": 0.4,
+        "roughness": [0.3, 0.55],
+        "coat": [0.0, 0.2],
+    },
     # nyloc inserts: blue is the most common in practice, then white (natural nylon)
     "insert_blue": {
         "base_color": [0.08, 0.22, 0.62],

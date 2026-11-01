@@ -1,0 +1,104 @@
+{
+  "id": "BRACKET_3030",
+  "class_name": "BRACKET_3030",
+  "family": "BRACKET",
+  "kind": "bracket",
+  "shape": "corner_bracket",
+  "size": "3030",
+  "length": null,
+  "pitch": null,
+  "fully_threaded": null,
+  "dims": {
+    "a": 28.0,
+    "w": 28.0,
+    "t": 4.0,
+    "ts": 2.5,
+    "dh": 6.5,
+    "slot": 3.0,
+    "key_w": 8.0,
+    "key_h": 1.5
+  },
+  "finishes": [
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": null,
+  "nominal_length_mode": null,
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        14.75
+      ],
+      "labelled": false
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        -14.75
+      ],
+      "labelled": false
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": false
+    }
+  },
+  "axis_height_when_lying": null,
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 184,
+    "triangles": 372,
+    "watertight": true,
+    "volume_mm3": 6798.827091835468,
+    "area_mm2": 4559.803515653683,
+    "bbox_min": [
+      -14.75,
+      -14.0,
+      -14.75
+    ],
+    "bbox_max": [
+      14.75,
+      14.0,
+      14.75
+    ],
+    "center_of_mass": [
+      -4.545917729560072,
+      3.0098766321716165e-16,
+      -4.545917729560071
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        372
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 4,
+    "triangles": 40
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "8ea24b3ed592ed3e"
+}

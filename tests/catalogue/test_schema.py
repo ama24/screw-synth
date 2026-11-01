@@ -4,7 +4,7 @@ from conftest import SHIPPED
 from screwsynth.catalogue.schema import CatalogueError, load_catalogue, parse_catalogue
 from screwsynth.catalogue.validate import errors, validate
 from screwsynth.common.config import load_config
-from screwsynth.common.naming import parse_part_id
+from screwsynth.common.naming import parse_part_id, size_value
 
 
 @pytest.fixture(scope="module")
@@ -50,7 +50,8 @@ def test_shipped_scope(shipped):
         if n.startswith("TNUT")
     )
     assert not any(p.verified for p in shipped.parts)
-    assert "aluminium" not in " ".join(shipped.finishes)
+    # aluminium only natural or black anodised (user decision 2026-11-01), no coloured anodising
+    assert {f for f in shipped.finishes if "aluminium" in f} == {"aluminium", "aluminium_black"}
     assert max(p.length for p in shipped.parts if p.length) <= 80
 
 
@@ -151,3 +152,30 @@ def test_structural_errors(minimal_data, mutate, match):
     mutate(minimal_data)
     with pytest.raises(CatalogueError, match=match):
         parse_catalogue(minimal_data)
+
+
+def test_shipped_expansion_2026_11(shipped):
+    """DIN 913, DIN 975, the three standoff types and the extrusion brackets (2026-11-01)."""
+    classes = set(shipped.classes())
+    sizes = ["M2", "M2.5", "M3", "M4", "M5", "M6", "M8", "M10"]
+    assert {f"DIN913_{s}" for s in sizes} | {f"DIN975_{s}" for s in sizes} <= classes
+    for t in ("MF", "FF", "MM"):
+        assert {f"STANDOFF_{t}_{s}" for s in sizes[:6]} <= classes
+        assert shipped.families[f"STANDOFF_{t}"].kind == "standoff"
+    assert {"BRACKET_2020", "BRACKET_3030", "BRACKET_4040"} <= classes
+    assert set(shipped.families["BRACKET"].finishes) == {"aluminium", "aluminium_black"}
+    steel_look = {"black_oxide", "stainless_a2", "stainless_a4", "plain_steel"}
+    assert set(shipped.families["DIN913"].finishes) == steel_look
+    assert shipped.part("STANDOFF_MF_M3x10").length == 10
+    assert shipped.part("BRACKET_2020").length is None
+    # threaded rod and standoffs are classes now, not unknown junk
+    assert not {"threaded_rod", "standoff"} & set(shipped.unknown.types)
+
+
+def test_set_screw_and_rod_lengths_never_cross(shipped):
+    """Lying on their side they look alike, so rod pieces start at twice the longest set screw."""
+    for size in shipped.families["DIN913"].sizes:
+        grub = shipped.families["DIN913"].sizes[size].lengths
+        rod = shipped.families["DIN975"].sizes[size].lengths
+        assert max(grub) < 3.5 * size_value(size)  # about 3 x d (the next standard length)
+        assert min(rod) >= 2 * max(grub), size

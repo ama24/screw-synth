@@ -340,9 +340,9 @@ async def test_gui_parts_selection_saves_rules(tmp_path, monkeypatch):
     async with user_simulation(root=gui.page) as user:
         await user.open("/?recipe=guitest&tab=parts")
         await user.should_see("screw-synth dataset builder")
-        await user.should_see("69 classes")  # 68 + UNKNOWN
+        await user.should_see("106 classes")  # 105 + UNKNOWN
         user.find(kind=ui.checkbox, marker="family-DIN912").click()
-        await user.should_see("61 classes")  # DIN912 has 8 sizes
+        await user.should_see("98 classes")  # DIN912 has 8 sizes
         await user.should_see("unsaved")
         user.find(marker="save").click()
     saved = recipe.load_recipe(tmp_path / "guitest.yaml")

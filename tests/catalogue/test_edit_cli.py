@@ -54,7 +54,7 @@ def test_add_length_uncommon_and_new_list(minimal_file):
     ("args", "match"),
     [
         (("DIN999", "M3", 8), "unknown family"),
-        (("DIN934", "M3", 8), "not a screw"),
+        (("DIN934", "M3", 8), "has no lengths"),
         (("DIN912", "M5", 8), "not in the family"),
         (("DIN912", "M3", -1), "> 0"),
     ],

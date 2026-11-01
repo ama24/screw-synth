@@ -1,10 +1,13 @@
 """Part-id and class-name builders and parsers.
 
 Part ids (see CLAUDE.md):
-  screws        <FAMILY>_<SIZE>x<LENGTH>        DIN912_M4x16
+  screws        <FAMILY>_<SIZE>x<LENGTH>        DIN912_M4x16, DIN913_M4x8, DIN975_M4x40
+  standoffs     <FAMILY>_<SIZE>x<LENGTH>        STANDOFF_MF_M3x10
   nuts/washers  <FAMILY>_<SIZE>                 DIN934_M4, DIN125A_M4
   T-nuts        TNUT_<SLIDE|DROP>_S<slot>_<SIZE> TNUT_DROP_S6_M4
+  profile parts <FAMILY>_<PROFILE>              BRACKET_2020 (extrusion size, 4 digits)
   unknown       UNKNOWN_<TYPE>_<NN>             UNKNOWN_WOODSCREW_03
+Family names are upper-case letters and digits, optionally in "_"-joined words (STANDOFF_MF).
 Class name = part id without the length; every unknown part has the class UNKNOWN.
 """
 
@@ -20,12 +23,14 @@ UNKNOWN = "UNKNOWN"  # family and class of the non-catalogue parts the machine r
 
 _NUM = r"\d+(?:\.\d+)?"
 _SIZE = rf"M{_NUM}"
-_FAMILY = r"[A-Z][A-Z0-9]*"
+_FAMILY = r"[A-Z][A-Z0-9]*(?:_[A-Z][A-Z0-9]*)*"
+_PROFILE = r"\d{4}"  # aluminium extrusion size: 2020, 3030, 4040
 _SCREW_RE = re.compile(rf"^(?P<family>{_FAMILY})_(?P<size>{_SIZE})x(?P<length>{_NUM})$")
 _TNUT_RE = re.compile(
     rf"^{TNUT_FAMILY}_(?P<kind>{'|'.join(TNUT_KINDS)})_S(?P<slot>\d+)_(?P<size>{_SIZE})$"
 )
 _PLAIN_RE = re.compile(rf"^(?P<family>{_FAMILY})_(?P<size>{_SIZE})$")
+_PROFILE_RE = re.compile(rf"^(?P<family>{_FAMILY})_(?P<profile>{_PROFILE})$")
 _UNKNOWN_RE = re.compile(rf"^{UNKNOWN}_(?P<variant>[A-Z][A-Z0-9]*_\d+)$")
 
 
@@ -39,6 +44,7 @@ class PartName:
     tnut_kind: str | None = None
     slot: int | None = None
     variant: str | None = None  # unknown parts: <TYPE>_<NN>
+    profile: str | None = None  # profile parts: extrusion size, e.g. "2020" (also the size)
 
     @property
     def is_screw(self) -> bool:
@@ -59,6 +65,8 @@ class PartName:
         if self.tnut_kind is not None:
             assert self.slot is not None
             return tnut_id(self.tnut_kind, self.slot, self.size)
+        if self.profile is not None:
+            return profile_id(self.family, self.profile)
         if self.length is not None:
             return screw_id(self.family, self.size, self.length)
         return plain_id(self.family, self.size)
@@ -67,7 +75,7 @@ class PartName:
     def class_name(self) -> str:
         if self.variant is not None:
             return UNKNOWN
-        if self.tnut_kind is not None:
+        if self.tnut_kind is not None or self.profile is not None:
             return self.part_id
         return plain_id(self.family, self.size)
 
@@ -101,8 +109,10 @@ def _check_family(family: str) -> str:
         raise ValueError(
             f"invalid family {family!r}: use upper-case letters and digits, e.g. DIN912"
         )
-    if family == TNUT_FAMILY:
+    if family == TNUT_FAMILY or family.startswith(f"{TNUT_FAMILY}_"):
         raise ValueError("use tnut_id() for T-nuts")
+    if family == UNKNOWN or family.startswith(f"{UNKNOWN}_"):
+        raise ValueError("use unknown_id() for unknown parts")
     return family
 
 
@@ -113,6 +123,14 @@ def screw_id(family: str, size: str | float, length: float) -> str:
 def plain_id(family: str, size: str | float) -> str:
     """Id of a part without a length (nut, washer); also the class name of a screw."""
     return f"{_check_family(family)}_{format_size(size)}"
+
+
+def profile_id(family: str, profile: str | int) -> str:
+    """Id (and class name) of a part made for an extrusion profile: BRACKET_2020."""
+    p = str(profile).strip()
+    if not re.fullmatch(_PROFILE, p):
+        raise ValueError(f"profile sizes have 4 digits (2020, 3030, 4040), got {profile!r}")
+    return f"{_check_family(family)}_{p}"
 
 
 def tnut_id(kind: str, slot: int, size: str | float) -> str:
@@ -144,13 +162,14 @@ def parse_part_id(part_id: str) -> PartName:
             slot=int(m["slot"]),
         )
     if m := _SCREW_RE.match(part_id):
-        if m["family"] == TNUT_FAMILY:
-            raise ValueError(f"invalid T-nut id: {part_id!r}")
+        _check_family(m["family"])
         return PartName(family=m["family"], size=format_size(m["size"]), length=float(m["length"]))
     if m := _PLAIN_RE.match(part_id):
-        if m["family"] == TNUT_FAMILY:
-            raise ValueError(f"invalid T-nut id: {part_id!r}")
+        _check_family(m["family"])
         return PartName(family=m["family"], size=format_size(m["size"]))
+    if m := _PROFILE_RE.match(part_id):
+        _check_family(m["family"])
+        return PartName(family=m["family"], size=m["profile"], profile=m["profile"])
     raise ValueError(f"part id does not follow the naming convention: {part_id!r}")
 
 

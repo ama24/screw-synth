@@ -1,0 +1,107 @@
+{
+  "id": "STANDOFF_MM_M2x3",
+  "class_name": "STANDOFF_MM_M2",
+  "family": "STANDOFF_MM",
+  "kind": "standoff",
+  "shape": "standoff_mm",
+  "size": "M2",
+  "length": 3.0,
+  "pitch": 0.4,
+  "fully_threaded": null,
+  "dims": {
+    "s": 4.0,
+    "e": 4.5,
+    "ls": 4.0,
+    "lf": 3.5,
+    "d": 2.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black"
+  ],
+  "nominal_length_mm": 3.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -3.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.0,
+    "tip": 2.0
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 9946,
+    "triangles": 19888,
+    "watertight": true,
+    "volume_mm3": 60.86993308404039,
+    "area_mm2": 134.00531166637236,
+    "bbox_min": [
+      -2.309401035308838,
+      -2.0,
+      -7.0
+    ],
+    "bbox_max": [
+      2.309401035308838,
+      2.0,
+      4.0
+    ],
+    "center_of_mass": [
+      -0.0002947836774889109,
+      -2.4097731034847765e-09,
+      -1.500000001816805
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        19888
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 3,
+    "triangles": 140
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "eaa43ddfdba42ada"
+}

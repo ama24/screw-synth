@@ -43,6 +43,17 @@ SAMPLE = [
     "TNUT_SLIDE_S8_M6",
     "TNUT_DROP_S6_M5",
     "TNUT_DROP_S8_M4",
+    "DIN913_M2x2",
+    "DIN913_M10x30",
+    "DIN975_M2x12",
+    "DIN975_M8x50",
+    "STANDOFF_MF_M2x3",  # shortest: the female thread stops short of the stud
+    "STANDOFF_MF_M3x10",
+    "STANDOFF_FF_M2.5x3",  # tapped through
+    "STANDOFF_FF_M5x30",
+    "STANDOFF_MM_M3x10",
+    "BRACKET_2020",
+    "BRACKET_4040",
 ]
 
 
@@ -236,7 +247,7 @@ def test_contact_sheet_parts(catalogue):
     real = [p for p in chosen if p.kind != "unknown"]
     assert len(real) == len(catalogue.families)
     assert {p.family for p in real} == set(catalogue.families)
-    assert all(p.size == "M4" for p in real)
+    assert all(p.size == "M4" for p in real if p.kind != "bracket")  # brackets: 2020...
     junk = [p for p in chosen if p.kind == "unknown"]  # one of each unknown type
     assert len(junk) == len({p.shape for p in catalogue.parts if p.kind == "unknown"})
 
@@ -289,3 +300,36 @@ def test_step_without_converter_explains(tmp_path):
     (tmp_path / "x.step").write_text("dummy", encoding="utf-8")
     with pytest.raises(BuildError, match="cadquery|STL"):
         load_source_mesh(tmp_path / "x.step")
+
+
+def test_headless_and_standoff_keypoints(catalogue, built):
+    """No head: head_top = bearing at z = 0, the nominal length is the overall (body) length."""
+    for pid in ("DIN913_M10x30", "DIN975_M8x50", "STANDOFF_MF_M3x10", "STANDOFF_MM_M3x10"):
+        part, b = catalogue.part(pid), built[pid]
+        assert b.labelled
+        assert b.keypoints["head_top"] == b.keypoints["bearing"] == [0, 0, 0]
+        assert nominal_length(part, b.keypoints) == pytest.approx(part.length)
+    assert not built["BRACKET_2020"].labelled
+
+
+def test_set_screw_socket_and_rod_ends(built):
+    v = built["DIN913_M10x30"].mesh.vertices
+    top = v[v[:, 2] > -0.01]
+    assert np.hypot(top[:, 0], top[:, 1]).min() < 3.0  # socket corners (s = 5) in the top face
+    rod = built["DIN975_M8x50"].mesh.vertices
+    ends = rod[(rod[:, 2] > -0.01) | (rod[:, 2] < -49.99)]
+    assert np.hypot(ends[:, 0], ends[:, 1]).max() < 4.0  # both ends chamfered below d / 2
+
+
+def test_standoff_studs(catalogue, built):
+    for pid, studs in (
+        ("STANDOFF_MF_M3x10", 1),
+        ("STANDOFF_FF_M5x30", 0),
+        ("STANDOFF_MM_M3x10", 2),
+    ):
+        b, d = built[pid], catalogue.part(pid).dims
+        lo, hi = b.mesh.bounds
+        assert (hi[2] - lo[2]) == pytest.approx(
+            catalogue.part(pid).length + studs * d["ls"], abs=1e-3
+        )
+        assert len(b.collision) == 1 + studs

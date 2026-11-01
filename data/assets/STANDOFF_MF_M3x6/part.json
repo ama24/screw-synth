@@ -1,0 +1,109 @@
+{
+  "id": "STANDOFF_MF_M3x6",
+  "class_name": "STANDOFF_MF_M3",
+  "family": "STANDOFF_MF",
+  "kind": "standoff",
+  "shape": "standoff_mf",
+  "size": "M3",
+  "length": 6.0,
+  "pitch": 0.5,
+  "fully_threaded": null,
+  "dims": {
+    "s": 5.5,
+    "e": 6.2,
+    "ls": 6.0,
+    "lf": 5.0,
+    "d": 3.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black",
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": 6.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -6.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 2.75,
+    "tip": 2.75
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 10946,
+    "triangles": 21888,
+    "watertight": true,
+    "volume_mm3": 161.70092323150502,
+    "area_mm2": 308.21895529030206,
+    "bbox_min": [
+      -3.175426483154297,
+      -2.75,
+      -12.0
+    ],
+    "bbox_max": [
+      3.175426483154297,
+      2.75,
+      0.0
+    ],
+    "center_of_mass": [
+      -0.0002132998450927999,
+      -7.11730635748809e-05,
+      -4.353859300442637
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        21888
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 2,
+    "triangles": 80
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "b0f871b60daef7e2"
+}

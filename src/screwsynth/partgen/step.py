@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
-from screwsynth.catalogue.schema import Part
+from screwsynth.catalogue.schema import LENGTH_KINDS, Part
 from screwsynth.common.paths import resolve
 
 from .builders import BuildError, BuiltPart, directional_hull
@@ -99,7 +99,7 @@ def build_step(part: Part, coll_n: int = 16) -> BuiltPart:
     mesh.apply_scale(scale)
 
     T = np.eye(4)
-    if part.kind == "screw":
+    if part.kind in LENGTH_KINDS:
         kp = {
             k: np.asarray(v, dtype=float) * scale for k, v in (entry.get("keypoints") or {}).items()
         }
@@ -125,7 +125,7 @@ def build_step(part: Part, coll_n: int = 16) -> BuiltPart:
         mesh.invert()
     radius = float(np.hypot(mesh.vertices[:, 0], mesh.vertices[:, 1]).max())
     info = {"source_file": str(entry["path"]), "units": entry.get("units", "mm")}
-    if part.kind == "screw":
+    if part.kind in LENGTH_KINDS:
         info["axis_height_when_lying"] = {"head": radius, "tip": part.dims.get("d", 2 * radius) / 2}
         info["axis_check_deg"] = math.degrees(math.acos(min(1.0, abs(T[2, 2]))))
     return BuiltPart(

@@ -6,13 +6,14 @@ from collections.abc import Mapping, Sequence
 
 import numpy as np
 
-from screwsynth.catalogue.schema import Part
+from screwsynth.catalogue.schema import LENGTH_KINDS, Part
 from screwsynth.common.naming import KEYPOINTS
 
 
 def nominal_length(part: Part, keypoints: Mapping[str, Sequence[float]]) -> float | None:
-    """Nominal length from keypoints: bearing-to-tip, or head_top-to-tip for countersunk screws."""
-    if part.kind != "screw":
+    """Nominal length from keypoints: bearing-to-tip, or head_top-to-tip (countersunk and headless
+    screws, standoffs)."""
+    if part.kind not in LENGTH_KINDS:
         return None
     start = "head_top" if part.nominal_length == "head_top_to_tip" else "bearing"
     return float(np.linalg.norm(np.subtract(keypoints[start], keypoints["tip"])))

@@ -1,0 +1,109 @@
+{
+  "id": "STANDOFF_MF_M4x30",
+  "class_name": "STANDOFF_MF_M4",
+  "family": "STANDOFF_MF",
+  "kind": "standoff",
+  "shape": "standoff_mf",
+  "size": "M4",
+  "length": 30.0,
+  "pitch": 0.7,
+  "fully_threaded": null,
+  "dims": {
+    "s": 7.0,
+    "e": 7.9,
+    "ls": 7.0,
+    "lf": 7.0,
+    "d": 4.0
+  },
+  "finishes": [
+    "brass",
+    "stainless_a2",
+    "zinc_clear",
+    "nylon_white",
+    "nylon_black",
+    "aluminium",
+    "aluminium_black"
+  ],
+  "nominal_length_mm": 30.0,
+  "nominal_length_mode": "head_top_to_tip",
+  "keypoints": {
+    "head_top": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "bearing": {
+      "xyz": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "labelled": true
+    },
+    "tip": {
+      "xyz": [
+        0.0,
+        0.0,
+        -30.0
+      ],
+      "labelled": true
+    }
+  },
+  "axis_height_when_lying": {
+    "head": 3.5,
+    "tip": 3.5
+  },
+  "frame": "local: axis +z; screws: bearing at z=0, head +z, tip -z; others centred",
+  "units": "mm",
+  "mesh": {
+    "file": "render.ply",
+    "vertices": 10059,
+    "triangles": 20114,
+    "watertight": true,
+    "volume_mm3": 1270.6097531280757,
+    "area_mm2": 1050.1756068487473,
+    "bbox_min": [
+      -4.041451930999756,
+      -3.5,
+      -37.0
+    ],
+    "bbox_max": [
+      4.041451930999756,
+      3.5,
+      0.0
+    ],
+    "center_of_mass": [
+      -9.254908030990743e-05,
+      -3.224557711673264e-05,
+      -16.67447048190989
+    ],
+    "material_slots": {
+      "body": [
+        0,
+        20114
+      ]
+    }
+  },
+  "collision": {
+    "file": "collision.obj",
+    "pieces": 2,
+    "triangles": 80
+  },
+  "checks": {
+    "passed": true,
+    "problems": []
+  },
+  "source": "parametric",
+  "info": {},
+  "generator_version": "1",
+  "lod": "med",
+  "lod_params": {
+    "thread_segments": 40,
+    "axial_per_pitch": 12,
+    "round_segments": 64
+  },
+  "catalogue_hash": "0859f0363b6762c6"
+}

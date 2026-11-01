@@ -10,7 +10,8 @@ Code expands these into the flat part list (family × size × length).
 - **Guide:** [docs/prompts/01_catalogue.txt](../../docs/prompts/01_catalogue.txt)
 - **Values to check:** [VERIFY.md](VERIFY.md)
 
-**Status: done.** The shipped catalogue has 347 parts and 68 classes, with a maximum length of 80 mm.
+**Status: done.** The shipped catalogue has 680 parts and 105 classes (plus UNKNOWN), with a maximum
+length of 80 mm.
 
 ## Contents
 
@@ -18,6 +19,9 @@ Code expands these into the flat part list (family × size × length).
 |---|---|---|
 | DIN912 (DIN 912 / ISO 4762), DIN933 (DIN 933 / ISO 4017) | screw | M2–M10 |
 | ISO7380, DIN7991 (DIN 7991 / ISO 10642) | screw | M3–M10 |
+| DIN913 (set screw, ISO 4026), DIN975 (threaded rod) | screw | M2–M10 |
+| STANDOFF_MF, STANDOFF_FF, STANDOFF_MM (hex standoffs) | standoff | M2–M6 |
+| BRACKET (corner bracket for extrusion) | bracket | 2020, 3030, 4040 |
 | DIN934 (hex nut) | nut | M2–M10 |
 | DIN985 (nyloc) | nut | M3–M10 |
 | DIN125A (DIN 125 A / ISO 7089) | washer | M2–M10 |
@@ -25,7 +29,12 @@ Code expands these into the flat part list (family × size × length).
 | TNUT_SLIDE, TNUT_DROP | tnut | slot 6: M3/M4/M5, slot 8: M4/M5/M6 |
 
 Finishes are `black_oxide`, `zinc_clear`, `zinc_yellow`, `stainless_a2`, `stainless_a4`, `plain_steel`, `brass`,
-`nylon_white` and `nylon_black`. They are visual only and never a class.
+`nylon_white`, `nylon_black`, `aluminium` and `aluminium_black` (anodised). They are visual only and never a class.
+
+**DIN 913 vs DIN 975.** Lying on their side, a set screw and a piece of threaded rod look alike from above (the
+socket is hidden), so their lengths never overlap. Set screws go up to about 3 × d (the next standard length). Rod
+pieces start at twice the longest set screw of the same size: M3 3–10 / 20–80, M5 5–16 / 35–80,
+M10 10–30 / 60–80. A test checks the gap.
 
 ## File format
 
@@ -37,7 +46,7 @@ families:
   DIN912:                        # family name: upper-case letters/digits (T-nuts: TNUT_<...>)
     title: Hexagon socket head cap screw
     standard: DIN 912 / ISO 4762
-    kind: screw                  # screw | nut | washer | tnut
+    kind: screw                  # screw | standoff | nut | washer | tnut | bracket
     shape: socket_cap            # which builder tool 02 uses (see "Shapes")
     nominal_length: bearing_to_tip   # screws only: bearing_to_tip | head_top_to_tip
     enabled: true
@@ -81,6 +90,10 @@ Expansion rules:
 | `nyloc_nut` (DIN 985) | d, s, h (total), m (metal part), e |
 | `washer` | d1 (inner), d2 (outer), h |
 | `tnut_slide`, `tnut_drop` | d, length (along slot), width (across slot), height, neck_width, neck_height |
+| `set_screw` (DIN 913) | d, s (socket across flats), t (socket depth) |
+| `threaded_rod` (DIN 975) | d |
+| `standoff_mf`, `standoff_ff`, `standoff_mm` | d, s (across flats), e (across corners), ls (male stud), lf (female thread depth); MF needs both, FF lf, MM ls |
+| `corner_bracket` | a (leg), w (width), t (leg thickness), ts (side wall), dh (hole), slot (hole elongation), key_w, key_h (alignment key) |
 
 ### STEP-based parts
 A family can set `source: step` instead of parametric dimensions. For screws, each size's `step` entry is keyed
@@ -91,8 +104,9 @@ validated here; tool 02 converts the files. See [templates/family_template.yaml]
 ### Unknown parts (`unknown:`)
 Junk that ends up on the plate but is not a catalogue part all gets one class, `UNKNOWN`, so the
 machine can reject it.
-- **Types:** `wood_screw`, `threaded_rod`, `split_washer`, `tooth_washer`, `pin`, `bracket`,
-  `standoff`, `plate` and `blob`.
+- **Types:** `wood_screw`, `split_washer`, `tooth_washer`, `pin`, `bracket` (bent sheet metal),
+  `plate` and `blob`. `threaded_rod` and `standoff` still exist but are left out of the shipped
+  catalogue, because DIN975 and the STANDOFF families are classes now.
 - **Variants:** each type gets `variants` shapes (default 6), with ids `UNKNOWN_WOODSCREW_01`, …
 - **Parameters:** each variant's parameters are drawn from the type's ranges (mm), seeded by the part
   id, so an id always gives the same part. The defaults are in `UNKNOWN_TYPES` in `schema.py`.

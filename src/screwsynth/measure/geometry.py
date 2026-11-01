@@ -39,6 +39,7 @@ class ClassGeometry:
     head_radius: float  # radius the head rests on when lying (dk/2, or s/2 for hex heads)
     # length -> keypoint heights (mm above the plate) in the usual lying pose
     heights_by_length: dict[float, dict[str, float]] = field(default_factory=dict)
+    kind: str = "screw"  # screw | standoff (the classical thread-width check is for screws)
 
     def heights(self, length: float) -> dict[str, float]:
         """Keypoint heights for a (raw) length: interpolated between the standard lengths."""
@@ -92,7 +93,7 @@ class Geometry:
 
     @classmethod
     def from_config(cls, cfg: Any) -> Geometry:
-        from screwsynth.catalogue.schema import catalogue_from_config
+        from screwsynth.catalogue.schema import LENGTH_KINDS, catalogue_from_config
         from screwsynth.common.io import read_json
         from screwsynth.common.paths import resolve
 
@@ -101,12 +102,13 @@ class Geometry:
         out: dict[str, ClassGeometry] = {}
         missing = 0
         for p in cat.enabled_parts:
-            if p.kind != "screw" or p.length is None:
+            if p.kind not in LENGTH_KINDS or p.length is None:
                 continue
             g = out.get(p.class_name)
             if g is None:
                 dims = p.dims
-                head_r = dims["s"] / 2 if p.shape == "hex" else dims.get("dk", dims["d"]) / 2
+                hex_body = p.shape == "hex" or p.kind == "standoff"
+                head_r = dims["s"] / 2 if hex_body else dims.get("dk", dims["d"]) / 2
                 g = out[p.class_name] = ClassGeometry(
                     class_name=p.class_name,
                     family=p.family,
@@ -115,6 +117,7 @@ class Geometry:
                     lengths=[],
                     d=float(dims["d"]),
                     head_radius=float(head_r),
+                    kind=p.kind,
                 )
             g.lengths.append(float(p.length))
             path = Path(rest_dir) / f"{p.id}.json"

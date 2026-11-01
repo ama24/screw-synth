@@ -11,7 +11,7 @@ from typing import Any
 from screwsynth.common.io import write_text
 from screwsynth.common.naming import format_size
 
-from .schema import CatalogueError
+from .schema import LENGTH_KINDS, CatalogueError
 
 
 def _yaml() -> Any:
@@ -63,8 +63,8 @@ def add_length(doc: Any, family: str, size: str, length: float, uncommon: bool =
     if family not in fams:
         raise CatalogueError(f"unknown family {family!r}")
     fam = fams[family]
-    if fam.get("kind") != "screw":
-        raise CatalogueError(f"{family} is not a screw family; only screws have lengths")
+    if fam.get("kind") not in LENGTH_KINDS:
+        raise CatalogueError(f"{family} has no lengths (only {', '.join(LENGTH_KINDS)} do)")
     if length <= 0:
         raise CatalogueError("length must be > 0")
     spec = fam["sizes"][_size_key(fam, size)]

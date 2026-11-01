@@ -27,12 +27,18 @@ the tool you are working on before changing it.
 ## Objects (all are detection targets, each with its own class)
 - Screws: DIN 912 (socket head cap), DIN 933 (hex head, fully threaded), ISO 7380 (button head),
   DIN 7991 (countersunk socket). Sizes M2, M2.5, M3, M4, M5, M6, M8, M10.
+- Set screws DIN 913 (flat point, M2-M10, up to about 3 x d) and threaded rod pieces DIN 975
+  (M2-M10, from twice the longest DIN 913 of the size, so the two never overlap in length).
+- Hex standoffs, one class per type and size: STANDOFF_MF / _FF / _MM (male-female,
+  female-female, male-male), M2-M6, length measured (the hex body).
+- Corner brackets for aluminium extrusion: BRACKET_2020, BRACKET_3030, BRACKET_4040 (not measured).
 - Nuts, washers, slide-in T-nuts and drop-in T-nuts (for aluminium extrusion slots).
-- UNKNOWN: one class for everything else that ends up on the plate (wood screws, threaded rod,
-  lock washers, pins, brackets, spacers, plates, odd bits), so the machine can reject it. Generated
+- UNKNOWN: one class for everything else that ends up on the plate (wood screws, lock washers,
+  pins, sheet-metal brackets, plates, odd bits), so the machine can reject it. Generated
   from the catalogue's `unknown:` section; a share `scenegen.unknown_fraction` of each scene.
-- Finishes: black oxide, zinc plated (clear/yellow), stainless A2/A4, plain steel, brass, nylon.
-  NO aluminium and no anodised colours. Finish is a visual variation only, never a class.
+- Finishes: black oxide, zinc plated (clear/yellow), stainless A2/A4, plain steel, brass, nylon,
+  aluminium natural and black anodised (brackets, standoffs). No coloured anodising. Finish is a
+  visual variation only, never a class.
   Magnetic vs non-magnetic is NOT distinguished.
 - Arrangement: a handful of parts thrown onto the plate and spread by hand: clumps, parts
   touching, some parts lying on top of others in small stacks (up to scenegen.clumped.max_layers,
@@ -82,15 +88,19 @@ Every tool reads the catalogue through `catalogue_from_config()`, so `catalogue.
 - Images: renders cover the ROI only, at full ROI resolution; the principal point is shifted
   accordingly. RGB as 8-bit PNG. Instance masks as 16-bit PNG, 0 = background, k = instance id
   listed in meta.json.
-- Part id: `<FAMILY>_<SIZE>x<LENGTH>` for screws (DIN912_M4x16), `<FAMILY>_<SIZE>` for nuts/washers
-  (DIN934_M4, DIN125A_M4), `TNUT_<SLIDE|DROP>_S<slot>_<SIZE>` for T-nuts (TNUT_DROP_S6_M4),
-  `UNKNOWN_<TYPE>_<NN>` for unknown parts (UNKNOWN_WOODSCREW_03, class UNKNOWN).
+- Part id: `<FAMILY>_<SIZE>x<LENGTH>` for screws and standoffs (DIN912_M4x16, STANDOFF_MF_M3x10),
+  `<FAMILY>_<SIZE>` for nuts/washers (DIN934_M4, DIN125A_M4), `TNUT_<SLIDE|DROP>_S<slot>_<SIZE>`
+  for T-nuts (TNUT_DROP_S6_M4), `<FAMILY>_<PROFILE>` for extrusion parts (BRACKET_2020),
+  `UNKNOWN_<TYPE>_<NN>` for unknown parts (UNKNOWN_WOODSCREW_03, class UNKNOWN). Family names may
+  have "_"-joined words; the prefixes TNUT_ and UNKNOWN_ are reserved.
   Use `screwsynth.common.naming`.
 - Class name: part id without the length (DIN912_M4). Class ids are assigned in a deterministic,
   sorted order and stored in a generated classes.yaml.
 - Keypoints: every object has 3 keypoints in this order: head_top, bearing (underside of the head),
-  tip. Non-screws mark all 3 as not visible. Nominal length is bearing-to-tip for DIN 912, DIN 933
-  and ISO 7380, and head_top-to-tip for DIN 7991 (countersunk length includes the head).
+  tip. Parts without a length mark all 3 as not visible. Nominal length is bearing-to-tip for
+  DIN 912, DIN 933 and ISO 7380, and head_top-to-tip for DIN 7991 (countersunk length includes the
+  head). Headless parts (DIN 913: head_top = socket end, DIN 975) and standoffs (the two ends of
+  the hex body) are head_top-to-tip with bearing = head_top.
 - BlenderProc scripts run inside Blender's own Python. They may only import the standard library,
   numpy, blenderproc/bpy and pure-Python modules from this repo (add src/ to sys.path at the top of
   the script). Anything that needs OpenCV, trimesh, torch etc. runs in normal Python, outside

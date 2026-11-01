@@ -139,3 +139,30 @@ def test_class_name(part_id, expected):
 
 def test_keypoint_order():
     assert KEYPOINTS == ("head_top", "bearing", "tip")
+
+
+def test_profile_parts_and_multiword_families():
+    from screwsynth.common.naming import profile_id
+
+    assert profile_id("BRACKET", 2020) == "BRACKET_2020"
+    p = parse_part_id("BRACKET_3030")
+    assert (p.family, p.size, p.profile, p.class_name) == (
+        "BRACKET",
+        "3030",
+        "3030",
+        "BRACKET_3030",
+    )
+    s = parse_part_id("STANDOFF_MF_M2.5x12")
+    assert (s.family, s.size, s.length, s.class_name) == (
+        "STANDOFF_MF",
+        "M2.5",
+        12.0,
+        "STANDOFF_MF_M2.5",
+    )
+    assert parse_part_id("STANDOFF_FF_M3").class_name == "STANDOFF_FF_M3"
+    with pytest.raises(ValueError):
+        profile_id("BRACKET", "20x20")
+    with pytest.raises(ValueError):
+        screw_id("TNUT_X", "M3", 5)  # T-nut and UNKNOWN prefixes are reserved
+    with pytest.raises(ValueError):
+        plain_id("UNKNOWN_FOO", "M3")
