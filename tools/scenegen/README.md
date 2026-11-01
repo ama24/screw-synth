@@ -220,6 +220,20 @@ parts and shows in their reflections (stainless, zinc and brass look like they d
 rotation bin) and `view_angle_per_class` (objects per 10° bin of the angle at which they are seen), to check
 the spread before training.
 
+### Dirt (`scenegen.dirt`)
+Dark oil and dust particles, for the parts and for the plate. **Both are off by default** and switch on and off
+separately (GUI: Dirt tab).
+- **Parts:** each part is dirty with probability `share`. Its oil coverage, dust amount and dust speck size are drawn
+  from the ranges once, so it keeps its dirt in every photo of the layout. The layers go over the part's own
+  colour, roughness and metallic: oil as a dark, satin film in smears of a few mm, dust as matt light specks.
+- **Plate:** each layout has a dirty plate with probability `share`, the same for all of its photos (lighting
+  variants and picker removals): oil stains of a few cm, and dust specks. This works over every background
+  (calibrated photo, surface photos, solid colours).
+- **Recorded:** per object in `material.dirt`, and for the plate in `lighting.plate_dirt` (`dirty`, `oil`, `dust`,
+  `dust_size_mm`, `seed`).
+- **Reproducibility:** dirt has its own random streams. Switching it on or off leaves the layouts, parts, poses and
+  lights of a seed unchanged. Dirt never changes the labels.
+
 ## Output layout
 
 ```
@@ -305,6 +319,7 @@ Per object:
 | `preview.*` | 10 scenes, scale 0.25, 16 samples | `--preview` |
 | `plate.*` | thickness 1.75, grid 24, roughness, bump, line pitch, `background_enabled` (photo on / images off / colours on), `background_weights` (photo 0.6 / images 0.2 / colours 0.2), `colours` (silicone blue), `colour_jitter` 0.15 | Plate and its background |
 | `shroud.*`, `lights.*` | | Enclosure and light panel ranges (power in Blender units at `world_scale` 10) |
+| `dirt.parts`, `dirt.plate` | off | Dirt: `enabled`, `share`, `oil`, `dust`, `dust_size_mm` (one value or a range) |
 | `wear`, `materials` | | Wear probabilities and preset overrides (defaults in `scenegen/materials.py`) |
 
 ## Performance (RTX 2070 Super, 8 GB)

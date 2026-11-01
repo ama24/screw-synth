@@ -18,6 +18,7 @@ import numpy as np
 from blenderproc.python.utility.BlenderUtility import get_all_blender_mesh_objects
 
 from . import backgrounds as bg
+from . import dirt as dirt_mod
 from .camera import RenderCamera
 
 log = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ def check_camera(cam: RenderCamera, world_scale: float, tol_px: float = 0.1) -> 
 # --------------------------------------------------------------------------------- materials
 
 
-def make_material(name: str, p: Mapping[str, Any]) -> bpy.types.Material:
+def make_material(name: str, p: Mapping[str, Any], bu_per_mm: float = 0.01) -> bpy.types.Material:
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     nt = mat.node_tree
@@ -157,7 +158,108 @@ def make_material(name: str, p: Mapping[str, Any]) -> bpy.types.Material:
         nt.links.new(gnoise.outputs["Fac"], fac.inputs["Value"])
         nt.links.new(fac.outputs["Result"], m_fac)
         nt.links.new(m_out, _input(bsdf, ["Base Color"]))
+    d = p.get("dirt") or {}
+    if d.get("dirty"):
+        w = (d.get("seed", 0) % 1000) * 0.173
+        vec = coord.outputs["Object"]
+        if d.get("oil", 0) > 0:  # smears of a few mm on parts a few mm thick
+            m = _oil_mask(nt, vec, d["oil"], 2.5 * bu_per_mm, w)
+            _overlay(nt, bsdf, ["Base Color"], m, (*OIL_RGB, 1.0))
+            _overlay(nt, bsdf, ["Roughness"], m, OIL_ROUGHNESS)
+            _overlay(nt, bsdf, ["Metallic"], m, 0.2)
+        if d.get("dust", 0) > 0:
+            m = _dust_mask(nt, vec, d["dust"], d["dust_size_mm"], bu_per_mm, w + 5.3)
+            _overlay(nt, bsdf, ["Base Color"], m, (*DUST_RGB, 1.0))
+            _overlay(nt, bsdf, ["Roughness"], m, 1.0)
+            _overlay(nt, bsdf, ["Metallic"], m, 0.0)
     return mat
+
+
+# ------------------------------------------------------------------------------------- dirt
+# Dark oil (glossy, nearly black-brown) and dust (matt, light grey-beige specks), layered over a
+# material's own colour, roughness and metallic. Amounts come from scenegen.dirt (dirt.py).
+
+OIL_RGB = (0.012, 0.009, 0.006)
+OIL_ROUGHNESS = 0.4  # a satin film: glossier than the plate, but no mirror of the light panel
+DUST_RGB = (0.55, 0.52, 0.47)
+
+
+def _mix_float(nt: bpy.types.NodeTree):
+    """Mix node in float mode: (factor, A, B, result) sockets."""
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.data_type = "FLOAT"
+    a = next(s for s in mix.inputs if s.name == "A" and s.type == "VALUE")
+    b = next(s for s in mix.inputs if s.name == "B" and s.type == "VALUE")
+    fac = next(s for s in mix.inputs if s.name == "Factor" and s.type == "VALUE")
+    out = next(s for s in mix.outputs if s.name == "Result" and s.type == "VALUE")
+    return mix, fac, a, b, out
+
+
+def _overlay(nt: bpy.types.NodeTree, node: bpy.types.Node, names: Sequence[str], mask, value):
+    """Blend an input of `node` towards `value` where `mask` is 1, keeping whatever feeds it now."""
+    sock = _input(node, names)
+    if sock is None:
+        return
+    colour = sock.type == "RGBA"
+    mix, fac, a, b, out = _mix_rgba(nt) if colour else _mix_float(nt)
+    if sock.is_linked:
+        nt.links.new(sock.links[0].from_socket, a)
+    else:
+        a.default_value = tuple(sock.default_value) if colour else sock.default_value
+    b.default_value = value
+    nt.links.new(mask, fac)
+    nt.links.new(out, sock)
+    return mix
+
+
+def _oil_mask(nt: bpy.types.NodeTree, vector, coverage: float, feature_bu: float, w: float):
+    """Blotchy 0..1 mask covering about `coverage` of the surface, blobs of about feature_bu."""
+    noise = nt.nodes.new("ShaderNodeTexNoise")
+    noise.noise_dimensions = "4D"
+    _set(noise, ["Scale"], 1.0 / max(feature_bu, 1e-6))
+    _set(noise, ["Detail"], 6.0)
+    _set(noise, ["Roughness"], 0.6)
+    _set(noise, ["W"], w)
+    nt.links.new(vector, noise.inputs["Vector"])
+    t = dirt_mod.oil_threshold(coverage)
+    ramp = nt.nodes.new("ShaderNodeMapRange")
+    _set(ramp, ["From Min"], t)
+    _set(ramp, ["From Max"], t + 0.12)  # soft edges: a film thinning out, not a painted patch
+    nt.links.new(noise.outputs["Fac"], ramp.inputs["Value"])
+    return ramp.outputs["Result"]
+
+
+def _dust_cell_mm(size_mm: float) -> float:
+    """Spacing of the dust grid: a speck takes at most a quarter of its cell."""
+    return max(4.0 * size_mm, 0.3)
+
+
+def _dust_mask(
+    nt: bpy.types.NodeTree, vector, amount: float, size_mm: float, bu_per_mm: float, w: float
+):
+    """Round specks of size_mm; `amount` = share of the grid cells that hold one (0..1)."""
+    cell = _dust_cell_mm(size_mm)
+    vor = nt.nodes.new("ShaderNodeTexVoronoi")
+    vor.voronoi_dimensions = "4D"
+    _set(vor, ["Scale"], 1.0 / (cell * bu_per_mm))
+    _set(vor, ["W"], w)
+    nt.links.new(vector, vor.inputs["Vector"])
+    sep = nt.nodes.new("ShaderNodeSeparateColor")
+    nt.links.new(vor.outputs["Color"], sep.inputs["Color"])
+    keep = nt.nodes.new("ShaderNodeMath")
+    keep.operation = "LESS_THAN"  # 1 in the cells whose random value is below the amount
+    nt.links.new(sep.outputs[0], keep.inputs[0])
+    keep.inputs[1].default_value = amount
+    r = size_mm / 2 / cell  # speck radius in cell units (Voronoi distance is in cell units)
+    spot = nt.nodes.new("ShaderNodeMapRange")
+    _set(spot, ["From Min"], r)
+    _set(spot, ["From Max"], 0.5 * r)  # 1 in the centre, soft edge
+    nt.links.new(vor.outputs["Distance"], spot.inputs["Value"])
+    both = nt.nodes.new("ShaderNodeMath")
+    both.operation = "MULTIPLY"
+    nt.links.new(keep.outputs[0], both.inputs[0])
+    nt.links.new(spot.outputs["Result"], both.inputs[1])
+    return both.outputs[0]
 
 
 # ------------------------------------------------------------------------------------- assets
@@ -261,6 +363,7 @@ class StaticScene:
         self._bg_cache: dict[str, str] = {}  # file -> name of the loaded bpy image
         plate_mat = self._plate_material()
         self.plate_mat_name = plate_mat.name
+        self.set_plate_dirt(dirt_mod.CLEAN)
         self.plate.blender_obj.data.materials.append(plate_mat)
         self.plate.set_cp("category_id", 0)
         th = float(pc.get("thickness_mm", 1.75))
@@ -393,6 +496,25 @@ class StaticScene:
         nt.links.new(out1, a2)
         nt.links.new(rgb.outputs["Color"], b2)
         nt.links.new(out2, _input(bsdf, ["Base Color"]))
+        rough = nt.nodes.new("ShaderNodeValue")
+        rough.name = "plate_rough"  # set per render by jitter()
+        rough.outputs[0].default_value = 0.75
+        nt.links.new(rough.outputs[0], _input(bsdf, ["Roughness"]))
+        # dirt layers (scenegen.dirt.plate), set per layout by set_plate_dirt(): oil stains of a
+        # few cm, then dust specks on top
+        vec = coord.outputs["Object"]
+        oil = _oil_mask(nt, vec, 0.0, 15.0 * self.s, 0.0)
+        oil.node.name = "plate_oil_mask"
+        oil.node.inputs["Value"].links[0].from_node.name = "plate_oil_noise"
+        _overlay(nt, bsdf, ["Base Color"], oil, (*OIL_RGB, 1.0))
+        _overlay(nt, bsdf, ["Roughness"], oil, OIL_ROUGHNESS)
+        dust = _dust_mask(nt, vec, 0.0, 0.2, self.s, 0.0)
+        keep = dust.node.inputs[0].links[0].from_node
+        spot = dust.node.inputs[1].links[0].from_node
+        keep.name, spot.name = "plate_dust_keep", "plate_dust_spot"
+        spot.inputs["Value"].links[0].from_node.name = "plate_dust_vor"
+        _overlay(nt, bsdf, ["Base Color"], dust, (*DUST_RGB, 1.0))
+        _overlay(nt, bsdf, ["Roughness"], dust, 1.0)
         # print lines: fine waves along x as a bump
         wave = nt.nodes.new("ShaderNodeTexWave")
         wave.wave_type = "BANDS"
@@ -450,6 +572,25 @@ class StaticScene:
         scale.inputs["Scale"].default_value = (1.0 / w_bu, 1.0 / h_bu, 1.0)
         scale.inputs["Location"].default_value = (*m["centre_uv"], 0.0)
 
+    def set_plate_dirt(self, d: Mapping[str, Any]) -> None:
+        """Oil stains and dust on the plate for one layout (dirt.sample(..., "plate", ...))."""
+        nodes = bpy.data.materials[self.plate_mat_name].node_tree.nodes
+        w = (d.get("seed", 0) % 1000) * 0.173
+        oil = float(d.get("oil", 0.0)) if d.get("dirty") else 0.0
+        t = dirt_mod.oil_threshold(oil) if oil > 0 else 2.0  # 2: above every noise value = clean
+        _set(nodes["plate_oil_mask"], ["From Min"], t)
+        _set(nodes["plate_oil_mask"], ["From Max"], t + 0.12)
+        _set(nodes["plate_oil_noise"], ["W"], w)
+        dust = float(d.get("dust", 0.0)) if d.get("dirty") else 0.0
+        size = float(d.get("dust_size_mm", 0.0)) or 0.2
+        cell = _dust_cell_mm(size)
+        nodes["plate_dust_keep"].inputs[1].default_value = dust
+        _set(nodes["plate_dust_vor"], ["Scale"], 1.0 / (cell * self.s))
+        _set(nodes["plate_dust_vor"], ["W"], w + 5.3)
+        r = size / 2 / cell
+        _set(nodes["plate_dust_spot"], ["From Min"], r)
+        _set(nodes["plate_dust_spot"], ["From Max"], 0.5 * r)
+
     def jitter(
         self, rng: random.Random, view: RenderCamera | None = None, rig_view: bool = True
     ) -> dict[str, Any]:
@@ -465,7 +606,7 @@ class StaticScene:
         rough = rng.uniform(*pc.get("roughness", [0.6, 0.9]))
         bump = rng.uniform(*pc.get("bump_strength", [0.0, 0.15]))
         nodes = bpy.data.materials[self.plate_mat_name].node_tree.nodes
-        _set(nodes["plate_bsdf"], ["Roughness"], rough)
+        nodes["plate_rough"].outputs[0].default_value = rough
         _set(nodes["plate_bump"], ["Strength"], bump)
         background = bg.choose(pc, self.images, self.texture is not None and rig_view, rng)
         self._show_background(nodes, background)

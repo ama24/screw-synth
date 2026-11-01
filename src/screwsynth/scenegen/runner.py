@@ -22,7 +22,7 @@ from screwsynth.common.png import write_png
 from screwsynth.common.seed import derive_seed
 
 from . import camera as camera_mod
-from . import environments
+from . import dirt, environments
 from .composition import BalancedSampler, BalanceState, parts_from_assets, plan_scene
 from .groundtruth import (
     discard_reason,
@@ -354,6 +354,12 @@ def run(args: RunArgs, cfg: Config) -> dict[str, Any]:
         environment = layout_environment(hdris, env, idx, args.seed)
         px_mm = _px_per_mm(vcam, area)
         occlusion_min_px = max(1, round(float(sg.get("occlusion_min_mm2", 0.5)) * px_mm**2))
+        # dirt has its own random streams: switching it on or off changes nothing else
+        drng = random.Random(derive_seed(args.seed, "dirt", idx))
+        plate_dirt = dirt.sample(
+            sg.get("dirt"), "plate", random.Random(derive_seed(args.seed, "plate-dirt", idx))
+        )
+        static.set_plate_dirt(plate_dirt)  # the same plate for every photo of the layout
         rrng = random.Random(derive_seed(args.seed, "removals", idx))
         removals = rrng.randint(*removal_range) if removal_range[1] > 0 else 0
         objs, mats = [], []
@@ -397,7 +403,10 @@ def run(args: RunArgs, cfg: Config) -> dict[str, Any]:
                 objs.append(obj)  # registered at once so a failure below still cleans it up
                 bs.place_instance(obj, children, T0, s, part.mass_kg(finish), physics, active, body)
                 material = {
-                    "body": sample_material(finish, sg.get("materials"), rng, sg.get("wear"))
+                    "body": {
+                        **sample_material(finish, sg.get("materials"), rng, sg.get("wear")),
+                        "dirt": dirt.sample(sg.get("dirt"), "parts", drng),
+                    }
                 }
                 if "insert" in part.meta["mesh"]["material_slots"]:
                     material["insert"] = sample_material(
@@ -407,7 +416,7 @@ def run(args: RunArgs, cfg: Config) -> dict[str, Any]:
                         {"scratches": 0, "grime": 0, "fingerprints": 0},
                     )
                 bmats = {
-                    k: bs.make_material(f"{info.id}_{k}_{len(objs)}", v)
+                    k: bs.make_material(f"{info.id}_{k}_{len(objs)}", v, s)
                     for k, v in material.items()
                 }
                 mats += [m.name for m in bmats.values()]
@@ -464,6 +473,7 @@ def run(args: RunArgs, cfg: Config) -> dict[str, Any]:
                         vcam,
                         view.rig_view,
                     )
+                    light["plate_dirt"] = dict(plate_dirt)
                     if environment is not None:
                         bs.set_environment(
                             paths["hdri_dir"] / environment["file"],

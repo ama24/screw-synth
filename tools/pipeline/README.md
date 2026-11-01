@@ -92,6 +92,9 @@ screwsynth-gui [--port 8080] [--no-browser]
   `.exr` files from a folder (copied to `paths.hdri_dir`), see a preview of each, switch files on or off,
   delete them. Links to free HDRI sites are in the tab; nothing is downloaded by the tool.
 
+- **Dirt tab:** dirt on the parts and dirt on the plate, each with its own on/off switch, share, dark oil, dust
+  amount and dust speck size (fixed or range). Both are off by default.
+
 ## Tests
 
 `pytest tests/pipeline` covers:

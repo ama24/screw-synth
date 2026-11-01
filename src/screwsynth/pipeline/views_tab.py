@@ -325,3 +325,40 @@ def hdri_thumbnail(path: Path, width: int = 320) -> Path | None:
     except Exception as exc:  # noqa: BLE001 - a preview must never break the tab
         log.debug("no preview for %s: %s", path, exc)
         return None
+
+
+DIRT_GUIDE = """Dirt layers a dark oil film and dust specks over the parts and the plate, so the model also
+works when the parts come out of an oily box or the plate has not been cleaned. Parts and plate are
+switched on and off separately.
+
+- **Share**: how many parts (or layouts, for the plate) get dirt at all.
+- **Oil**: how much of a dirty surface the dark oil covers (0 = none, 1 = all of it).
+- **Dust**: how many dust specks (0 = none, 1 = as many as fit).
+- **Dust speck size** in mm.
+
+A part keeps its dirt in every photo of its layout, and the plate stays the same for all photos of
+a layout (picker removals and lighting variants). Dirt never changes the labels."""
+
+
+def dirt_tab(page: Any) -> None:
+    """Dirt on the parts and on the plate, each with its own switch (scenegen.dirt)."""
+    ed = page.ed
+    with ui.column().classes("w-full max-w-5xl gap-3"):
+        with ui.expansion("What dirt does", icon="help").classes("w-full"):
+            ui.markdown(DIRT_GUIDE)
+        for target, title in (("parts", "Dirt on the parts"), ("plate", "Dirt on the plate (bed)")):
+            base = f"scenegen.dirt.{target}"
+            with ui.card().classes("w-full").mark(f"dirt-{target}"):
+                ui.label(title).classes("font-bold")
+                page.w.field(f"{base}.enabled", f"{title}: on")
+                page.w.field(
+                    f"{base}.share",
+                    "Share of dirty parts" if target == "parts" else "Share of dirty layouts",
+                )
+                fixed_or_range(
+                    ed, f"{base}.oil", "Dark oil", [0.05, 0.5], None, "covered share, 0..1"
+                )
+                fixed_or_range(ed, f"{base}.dust", "Dust", [0.05, 0.4], None, "amount, 0..1")
+                fixed_or_range(
+                    ed, f"{base}.dust_size_mm", "Dust speck size (mm)", [0.1, 0.4], None, "mm"
+                )
