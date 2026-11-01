@@ -182,8 +182,28 @@ class _Snapper:
             self.cam.close()
 
 
+def torch_problem(version: str, machine: str) -> str | None:
+    """Why this PyTorch build will crash here, or None. The PyPI build for 64-bit ARM is the NVIDIA
+    (CUDA) one; on a Raspberry Pi it stops with "Illegal instruction" at the first tensor operation."""
+    if machine.lower() in ("aarch64", "arm64") and "+cu" in version:
+        return (
+            f"PyTorch {version} is the NVIDIA (CUDA) build, which stops a Raspberry Pi with "
+            '"Illegal instruction". Install the CPU build:\n'
+            "  pip uninstall -y torch torchvision\n"
+            "  pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu"
+        )
+    return None
+
+
 def run(args: argparse.Namespace) -> int:
+    import platform
+
     import cv2
+    import torch
+
+    problem = torch_problem(torch.__version__, platform.machine())
+    if problem:
+        raise SystemExit(problem)
 
     from screwsynth.measure.cli import _calibration
     from screwsynth.measure.geometry import Geometry

@@ -4,8 +4,14 @@
 #   python3 -m venv --system-site-packages ~/screwrig && source ~/screwrig/bin/activate
 #   pip install -r rig/requirements-pi.txt
 opencv-contrib-python-headless>=4.8
-# running the trained model on the Pi (screwsynth-infer): Ultralytics (pulls PyTorch for the CPU)
-# and NCNN, the fastest model format on a Raspberry Pi (model-trainer: Export > NCNN)
+# PyTorch from its CPU-only index: the plain PyPI build for 64-bit ARM is the NVIDIA (CUDA) one
+# (e.g. 2.15.0+cu132), which stops a Pi 4 with "Illegal instruction". The CPU build (+cpu) has a
+# higher version than the PyPI one, so pip takes it from here.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+# running the trained model on the Pi (screwsynth-infer): Ultralytics and NCNN, the fastest model
+# format on a Raspberry Pi (model-trainer: Export > NCNN)
 ultralytics>=8.4
 ncnn
 -e .
