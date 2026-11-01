@@ -23,12 +23,19 @@ def preannotate(
     cfg: Any,
 ) -> list[ImageAnn]:
     """Detections as polygons (class labels); keypoints for screws the pipeline found measurable."""
+    from screwsynth.calibration.geometry import nominal_from_config
     from screwsynth.measure.geometry import Geometry
     from screwsynth.measure.infer import Pipeline, Scene, Settings
 
-    cam, roi, meta = roi_camera(calibration)
+    nominal = nominal_from_config(cfg)
+    cam, roi, meta = roi_camera(calibration, nominal)
     pipe = Pipeline(
-        stage1, stage2, Geometry.from_config(cfg), Settings.from_config(cfg.to_dict()), calibration
+        stage1,
+        stage2,
+        Geometry.from_config(cfg),
+        Settings.from_config(cfg.to_dict()),
+        calibration,
+        nominal=nominal,
     )
     out = []
     for p in images:

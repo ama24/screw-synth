@@ -39,7 +39,7 @@ class Settings:
     polygon_min_points: int = 4
     multi_piece: str = "merge"  # merge | largest
     crop_size_px: int = 384
-    crop_mode: str = "fixed"  # fixed | scaled
+    crop_mode: str = "scaled"  # fixed | scaled (measure.crops)
     crop_margin: float = 1.2
     split: Mapping[str, float] = field(default_factory=lambda: {"train": 0.9, "val": 0.1})
     seed: int = 0
@@ -58,7 +58,7 @@ class Settings:
             polygon_min_points=int(s.get("polygon_min_points", 4)),
             multi_piece=str(s.get("multi_piece", "merge")),
             crop_size_px=int(s.get("crop_size_px", 384)),
-            crop_mode=str(s.get("crop_mode", "fixed")),
+            crop_mode=str(s.get("crop_mode", "scaled")),
             crop_margin=float(s.get("crop_margin", 1.2)),
             split=dict(s.get("split", {"train": 0.9, "val": 0.1})),
             seed=seed,
@@ -176,17 +176,13 @@ def yolo_lines(insts: Sequence[Instance], w: int, h: int) -> dict[str, list[str]
 
 def make_crop(image: np.ndarray, ins: Instance, st: Settings) -> tuple[np.ndarray, dict[str, Any]]:
     """Full-resolution crop centred on the object; keypoints in crop coordinates."""
+    from screwsynth.measure.crops import crop_window
+
     h, w = image.shape[:2]
-    x0, y0, x1, y1 = ins.box
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    side = st.crop_size_px
-    if st.crop_mode == "scaled":
-        side = int(max(st.crop_size_px, st.crop_margin * max(x1 - x0, y1 - y0)))
-    side = min(side, w, h)
-    ox = int(np.clip(round(cx - side / 2), 0, w - side))
-    oy = int(np.clip(round(cy - side / 2), 0, h - side))
+    ox, oy, side, scale = crop_window(
+        ins.box, (w, h), st.crop_size_px, st.crop_mode, st.crop_margin
+    )
     crop = image[oy : oy + side, ox : ox + side]
-    scale = st.crop_size_px / side
     if side != st.crop_size_px:
         crop = cv2.resize(crop, (st.crop_size_px, st.crop_size_px), interpolation=cv2.INTER_AREA)
     k = ins.kps.copy()

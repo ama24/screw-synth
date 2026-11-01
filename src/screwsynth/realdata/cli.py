@@ -7,6 +7,7 @@ import logging
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from screwsynth.common.config import load_config
 from screwsynth.common.io import read_json, read_yaml, write_json
@@ -51,6 +52,12 @@ class _Ctx:
         )
         return None
 
+    def nominal(self) -> Any:
+        """The nominal camera (configured height) for when there is no calibration."""
+        from screwsynth.calibration.geometry import nominal_from_config
+
+        return nominal_from_config(self.cfg)
+
     def classes(self) -> dict[str, int]:
         names = read_yaml(resolve(self.cfg.get("paths.classes", "configs/classes.yaml")))["names"]
         return {v: int(k) for k, v in names.items()}
@@ -86,7 +93,7 @@ def cmd_preannotate(ctx: _Ctx, args: argparse.Namespace) -> int:
 
     d = ctx.session(args.session)
     calib = ctx.calibration()
-    images = prepare_images(d, calib)
+    images = prepare_images(d, calib, ctx.nominal())
     stage1 = args.stage1 or ctx.cfg.get("measure.stage1_weights")
     if not stage1:
         raise SystemExit("no stage-1 weights: pass --stage1 or set measure.stage1_weights")
@@ -110,7 +117,7 @@ def cmd_export_cvat(ctx: _Ctx, args: argparse.Namespace) -> int:
         import cv2
 
         anns = []
-        for p in prepare_images(d, ctx.calibration()):
+        for p in prepare_images(d, ctx.calibration(), ctx.nominal()):
             h, w = cv2.imread(str(p)).shape[:2]
             anns.append(cvat.ImageAnn(p.name, w, h, []))
     classes = list(ctx.classes())
@@ -153,7 +160,7 @@ def cmd_match(ctx: _Ctx, args: argparse.Namespace) -> int:
 
     d = ctx.session(args.session)
     inventory = read_inventory(d / "inventory.csv", ctx.finishes())
-    cam, _, _ = roi_camera(ctx.calibration())
+    cam, _, _ = roi_camera(ctx.calibration(), ctx.nominal())
     geo = Geometry.from_config(ctx.cfg)
     found = []
     for ann in _corrected(d):
@@ -193,7 +200,9 @@ def cmd_build_dataset(ctx: _Ctx, args: argparse.Namespace) -> int:
         d = ctx.session(name)
         inventory = read_inventory(d / "inventory.csv", ctx.finishes())
         matches = matching.read_matches(d / "matches.csv")
-        scenes += build_scenes(d, _corrected(d), matches, inventory, calib, class_ids, catalogue)
+        scenes += build_scenes(
+            d, _corrected(d), matches, inventory, calib, class_ids, catalogue, ctx.nominal()
+        )
     if not scenes:
         raise SystemExit("no labelled images: import corrected annotations first")
     st = ex.Settings.from_config(dict(ctx.cfg.get("labels", {}) or {}), int(ctx.cfg.get("seed", 0)))

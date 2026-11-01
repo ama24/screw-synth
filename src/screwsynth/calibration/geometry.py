@@ -119,6 +119,18 @@ def nominal_camera(
     return Camera(K, np.zeros(5), size, T)
 
 
+def nominal_from_config(cfg: Any) -> Camera:
+    """The nominal camera as configured in scenegen.nominal_camera (focal length, pixel size,
+    resolution, height): the same camera --nominal-camera renders with."""
+    nc = dict(cfg.get("scenegen.nominal_camera", {}) or {})
+    return nominal_camera(
+        focal_mm=float(nc.get("focal_length_mm", 4.74)),
+        pixel_um=float(nc.get("pixel_size_um", 1.4)),
+        size=tuple(int(v) for v in nc.get("resolution", (4608, 2592))),
+        height_mm=float(nc.get("height_mm", 300.0)),
+    )
+
+
 def roi_for_area(
     cam: Camera,
     origin_mm: Sequence[float],

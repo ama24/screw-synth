@@ -9,6 +9,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
+from screwsynth.calibration.geometry import nominal_from_config
 from screwsynth.common.config import load_config
 from screwsynth.common.io import read_json, write_json, write_text
 from screwsynth.common.log import setup_logging
@@ -104,6 +105,7 @@ def infer_main(argv: Sequence[str] | None = None) -> int:
         st,
         _calibration(cfg, args),
         resolve(cfg.get("paths.classes", "configs/classes.yaml")),
+        nominal=nominal_from_config(cfg),
     )
     for img in args.image:
         path = resolve(img)

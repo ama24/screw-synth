@@ -205,6 +205,7 @@ def run(args: argparse.Namespace) -> int:
     if problem:
         raise SystemExit(problem)
 
+    from screwsynth.calibration.geometry import nominal_from_config
     from screwsynth.measure.cli import _calibration
     from screwsynth.measure.geometry import Geometry
     from screwsynth.measure.infer import Pipeline, Settings, draw
@@ -229,6 +230,7 @@ def run(args: argparse.Namespace) -> int:
         Settings.from_config(cfg.to_dict()),
         _calibration(cfg, args),
         resolve(cfg.get("paths.classes", "configs/classes.yaml")),
+        nominal=nominal_from_config(cfg),
     )
     snapper = _Snapper(args.settings)
     _status(out, "ready: press Enter in the terminal")
