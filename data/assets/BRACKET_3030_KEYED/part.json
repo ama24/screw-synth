@@ -1,22 +1,22 @@
 {
-  "id": "BRACKET_2020",
-  "class_name": "BRACKET_2020",
+  "id": "BRACKET_3030_KEYED",
+  "class_name": "BRACKET_3030",
   "family": "BRACKET",
   "kind": "bracket",
   "shape": "corner_bracket",
-  "size": "2020",
+  "size": "3030",
   "length": null,
   "pitch": null,
   "fully_threaded": null,
   "dims": {
-    "a": 20.0,
-    "w": 20.0,
-    "t": 3.0,
-    "ts": 2.0,
-    "dh": 5.5,
-    "slot": 2.0,
-    "key_w": 6.0,
-    "key_h": 1.2
+    "a": 28.0,
+    "w": 28.0,
+    "t": 4.0,
+    "ts": 2.5,
+    "dh": 6.5,
+    "slot": 3.0,
+    "key_w": 8.0,
+    "key_h": 1.5
   },
   "finishes": [
     "aluminium",
@@ -29,7 +29,7 @@
       "xyz": [
         0.0,
         0.0,
-        10.6
+        14.75
       ],
       "labelled": false
     },
@@ -37,7 +37,7 @@
       "xyz": [
         0.0,
         0.0,
-        -10.6
+        -14.75
       ],
       "labelled": false
     },
@@ -55,30 +55,30 @@
   "units": "mm",
   "mesh": {
     "file": "render.ply",
-    "vertices": 186,
-    "triangles": 376,
+    "vertices": 184,
+    "triangles": 372,
     "watertight": true,
-    "volume_mm3": 2551.7100028610043,
-    "area_mm2": 2326.880832724413,
+    "volume_mm3": 6798.827091835468,
+    "area_mm2": 4559.803515653683,
     "bbox_min": [
-      -10.600000381469727,
-      -10.0,
-      -10.600000381469727
+      -14.75,
+      -14.0,
+      -14.75
     ],
     "bbox_max": [
-      10.600000381469727,
-      10.0,
-      10.600000381469727
+      14.75,
+      14.0,
+      14.75
     ],
     "center_of_mass": [
-      -3.1341093880079853,
-      3.4900004094803153e-16,
-      -3.1341093880079858
+      -4.545917729560072,
+      3.0098766321716165e-16,
+      -4.545917729560071
     ],
     "material_slots": {
       "body": [
         0,
-        376
+        372
       ]
     }
   },
@@ -100,5 +100,5 @@
     "axial_per_pitch": 12,
     "round_segments": 64
   },
-  "catalogue_hash": "9f41d16d3255c3e7"
+  "catalogue_hash": "66cb0b6357784fbc"
 }

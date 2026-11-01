@@ -5,7 +5,8 @@ Part ids (see CLAUDE.md):
   standoffs     <FAMILY>_<SIZE>x<LENGTH>        STANDOFF_MF_M3x10
   nuts/washers  <FAMILY>_<SIZE>                 DIN934_M4, DIN125A_M4
   T-nuts        TNUT_<SLIDE|DROP>_S<slot>_<SIZE> TNUT_DROP_S6_M4
-  profile parts <FAMILY>_<PROFILE>              BRACKET_2020 (extrusion size, 4 digits)
+  profile parts <FAMILY>_<PROFILE>[_<STYLE>]    BRACKET_2020, BRACKET_2020_CAST (extrusion size,
+                                                4 digits; styles are look-alike variants of one class)
   unknown       UNKNOWN_<TYPE>_<NN>             UNKNOWN_WOODSCREW_03
 Family names are upper-case letters and digits, optionally in "_"-joined words (STANDOFF_MF).
 Class name = part id without the length; every unknown part has the class UNKNOWN.
@@ -30,7 +31,9 @@ _TNUT_RE = re.compile(
     rf"^{TNUT_FAMILY}_(?P<kind>{'|'.join(TNUT_KINDS)})_S(?P<slot>\d+)_(?P<size>{_SIZE})$"
 )
 _PLAIN_RE = re.compile(rf"^(?P<family>{_FAMILY})_(?P<size>{_SIZE})$")
-_PROFILE_RE = re.compile(rf"^(?P<family>{_FAMILY})_(?P<profile>{_PROFILE})$")
+_PROFILE_RE = re.compile(
+    rf"^(?P<family>{_FAMILY})_(?P<profile>{_PROFILE})(?:_(?P<style>[A-Z][A-Z0-9]*))?$"
+)
 _UNKNOWN_RE = re.compile(rf"^{UNKNOWN}_(?P<variant>[A-Z][A-Z0-9]*_\d+)$")
 
 
@@ -45,6 +48,7 @@ class PartName:
     slot: int | None = None
     variant: str | None = None  # unknown parts: <TYPE>_<NN>
     profile: str | None = None  # profile parts: extrusion size, e.g. "2020" (also the size)
+    style: str | None = None  # profile parts: variant of the same class, e.g. "CAST"
 
     @property
     def is_screw(self) -> bool:
@@ -66,7 +70,7 @@ class PartName:
             assert self.slot is not None
             return tnut_id(self.tnut_kind, self.slot, self.size)
         if self.profile is not None:
-            return profile_id(self.family, self.profile)
+            return profile_id(self.family, self.profile, self.style)
         if self.length is not None:
             return screw_id(self.family, self.size, self.length)
         return plain_id(self.family, self.size)
@@ -75,7 +79,9 @@ class PartName:
     def class_name(self) -> str:
         if self.variant is not None:
             return UNKNOWN
-        if self.tnut_kind is not None or self.profile is not None:
+        if self.profile is not None:
+            return profile_id(self.family, self.profile)  # all styles share the class
+        if self.tnut_kind is not None:
             return self.part_id
         return plain_id(self.family, self.size)
 
@@ -125,12 +131,19 @@ def plain_id(family: str, size: str | float) -> str:
     return f"{_check_family(family)}_{format_size(size)}"
 
 
-def profile_id(family: str, profile: str | int) -> str:
-    """Id (and class name) of a part made for an extrusion profile: BRACKET_2020."""
+def profile_id(family: str, profile: str | int, style: str | None = None) -> str:
+    """Id of a part made for an extrusion profile: BRACKET_2020, or with a style (a look-alike
+    variant of the same class) BRACKET_2020_CAST. Without a style it is also the class name."""
     p = str(profile).strip()
     if not re.fullmatch(_PROFILE, p):
         raise ValueError(f"profile sizes have 4 digits (2020, 3030, 4040), got {profile!r}")
-    return f"{_check_family(family)}_{p}"
+    pid = f"{_check_family(family)}_{p}"
+    if style is None:
+        return pid
+    st = re.sub(r"[^A-Z0-9]", "", str(style).upper())
+    if not st or not st[0].isalpha():
+        raise ValueError(f"invalid style {style!r}: letters and digits, starting with a letter")
+    return f"{pid}_{st}"
 
 
 def tnut_id(kind: str, slot: int, size: str | float) -> str:
@@ -169,7 +182,9 @@ def parse_part_id(part_id: str) -> PartName:
         return PartName(family=m["family"], size=format_size(m["size"]))
     if m := _PROFILE_RE.match(part_id):
         _check_family(m["family"])
-        return PartName(family=m["family"], size=m["profile"], profile=m["profile"])
+        return PartName(
+            family=m["family"], size=m["profile"], profile=m["profile"], style=m["style"]
+        )
     raise ValueError(f"part id does not follow the naming convention: {part_id!r}")
 
 

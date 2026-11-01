@@ -52,8 +52,9 @@ SAMPLE = [
     "STANDOFF_FF_M2.5x3",  # tapped through
     "STANDOFF_FF_M5x30",
     "STANDOFF_MM_M3x10",
-    "BRACKET_2020",
-    "BRACKET_4040",
+    "BRACKET_2020_KEYED",
+    "BRACKET_2020_CAST",
+    "BRACKET_4040_CAST",
 ]
 
 
@@ -309,7 +310,7 @@ def test_headless_and_standoff_keypoints(catalogue, built):
         assert b.labelled
         assert b.keypoints["head_top"] == b.keypoints["bearing"] == [0, 0, 0]
         assert nominal_length(part, b.keypoints) == pytest.approx(part.length)
-    assert not built["BRACKET_2020"].labelled
+    assert not built["BRACKET_2020_CAST"].labelled
 
 
 def test_set_screw_socket_and_rod_ends(built):
@@ -361,3 +362,25 @@ def test_female_standoffs_are_threaded_through(catalogue, built):
     v = built["STANDOFF_FF_M5x30"].mesh.vertices
     middle = v[np.abs(v[:, 2] + 15) < 1.0]  # halfway along the 30 mm body
     assert np.hypot(middle[:, 0], middle[:, 1]).min() < 2.5  # the bore reaches the middle
+
+
+def test_cast_bracket_has_pockets_and_short_tabs(catalogue, built):
+    """The cast style: pockets in the outer face and a short tab instead of a full-length key."""
+
+    cd = catalogue.part("BRACKET_2020_CAST").dims
+    for pid, pocket in (("BRACKET_2020_CAST", True), ("BRACKET_2020_KEYED", False)):
+        mesh, d = built[pid].mesh, catalogue.part(pid).dims
+        v = mesh.vertices - mesh.bounds[0]  # corner frame, shifted by the keys (key_h)
+        z = v[:, 2] - d["key_h"]  # 0 = outer face of the base leg
+        y = np.abs(v[:, 1] - d["w"] / 2)  # distance from the middle of the width
+        # the floor of a pocket: vertices pocket_d deep, near the side edges
+        floor = (np.abs(z - cd["pocket_d"]) < 1e-3) & (y > d["w"] / 2 - 1 - cd["pocket_w"] - 1e-3)
+        assert bool(floor.any()) is pocket, pid
+    # the tab is short: below the base leg there is material only near the corner
+    cast, d = built["BRACKET_2020_CAST"].mesh, catalogue.part("BRACKET_2020_CAST").dims
+    v = cast.vertices - cast.bounds[0]
+    under = v[v[:, 2] < d["key_h"] - 1e-3]
+    assert under[:, 0].max() <= d["key_h"] + d["t"] + 0.5 + d["key_len"] + 1e-3
+    keyed, kd = built["BRACKET_2020_KEYED"].mesh, catalogue.part("BRACKET_2020_KEYED").dims
+    kv = keyed.vertices - keyed.bounds[0]
+    assert kv[kv[:, 2] < kd["key_h"] - 1e-3][:, 0].max() > kd["a"] - 1  # keyed: along the leg

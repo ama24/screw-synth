@@ -21,7 +21,7 @@ length of 80 mm.
 | ISO7380, DIN7991 (DIN 7991 / ISO 10642) | screw | M3–M10 |
 | DIN913 (set screw, ISO 4026), DIN975 (threaded rod) | screw | M2–M10 |
 | STANDOFF_MF, STANDOFF_FF, STANDOFF_MM (hex standoffs) | standoff | M2–M6 |
-| BRACKET (corner bracket for extrusion) | bracket | 2020, 3030, 4040 |
+| BRACKET (corner bracket for extrusion), styles `keyed` and `cast` | bracket | 2020, 3030, 4040 |
 | DIN934 (hex nut) | nut | M2–M10 |
 | DIN985 (nyloc) | nut | M3–M10 |
 | DIN125A (DIN 125 A / ISO 7089) | washer | M2–M10 |
@@ -101,7 +101,12 @@ Expansion rules:
 | `set_screw` (DIN 913) | d, s (socket across flats), t (socket depth) |
 | `threaded_rod` (DIN 975) | d |
 | `standoff_mf`, `standoff_ff`, `standoff_mm` | d, s (across flats), e (across corners), ls (male stud), lf (female thread depth); MF needs both, FF lf, MM ls |
-| `corner_bracket` | a (leg), w (width), t (leg thickness), ts (side wall), dh (hole), slot (hole elongation), key_w, key_h (alignment key) |
+| `corner_bracket` | a (leg), w (width), t (leg thickness), ts (side wall), dh (hole), slot (hole elongation), key_w, key_h (alignment key); optional key_len (short tab instead of a full-length key), pocket_w, pocket_len, pocket_d (pockets in the outer face) |
+
+**Styles.** A profile size may list `styles: {name: {dimension overrides}}`. Each style becomes its own part
+(`BRACKET_2020_CAST`) in the same class (`BRACKET_2020`): look-alike variants that go in one bin. The bracket has
+`keyed` (compact, a key along the whole leg) and `cast` (the common "2028" type: 28 mm legs, 3.5 mm walls,
+6 × 11 mm hole, pockets and short tabs, from a vendor drawing for 2020; 3030/4040 scaled).
 
 ### STEP-based parts
 A family can set `source: step` instead of parametric dimensions. For screws, each size's `step` entry is keyed

@@ -163,6 +163,9 @@ def _check_size(fam: Family, spec: SizeSpec, c: _Collector) -> None:
 
     if fam.source == "step":
         _check_step(fam, spec, where, c)
+    elif spec.styles:  # every style is its own set of dimensions
+        for name, over in spec.styles.items():
+            _check_shape(fam.shape, {**d, **over}, f"{where}.styles.{name}", c)
     else:
         _check_shape(fam.shape, d, where, c)
 
@@ -208,6 +211,15 @@ def _check_shape(shape: str, d: dict[str, float], where: str, c: _Collector) -> 
         sane(2 * d["ts"] + d["dh"] < d["w"], "the hole dh must fit between the side walls")
         sane(d["dh"] + d["slot"] < d["a"] - d["t"], "the hole/slot must fit on the leg")
         sane(d["key_w"] < d["w"] and d["key_h"] < d["t"], "the alignment key must be small")
+        if d.get("key_len"):
+            sane(d["key_len"] <= d["a"] - d["t"] - 1, "key_len must fit on the leg")
+        if d.get("pocket_w"):
+            sane(
+                2 * d["pocket_w"] + d["dh"] + 2 < d["w"],
+                "two pockets and the hole must fit across w",
+            )
+            sane(d.get("pocket_d", 0) < d["t"], "pocket_d must be < the leg thickness t")
+            sane(d.get("pocket_len", 0) < d["a"] - d["t"], "pocket_len must fit on the leg")
     if shape in ("tnut_slide", "tnut_drop"):
         sane(d["neck_width"] > d["d"] * 0.9, "neck_width must leave room for the thread")
         sane(d["neck_width"] <= d["width"], "neck_width must be <= width")

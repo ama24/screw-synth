@@ -167,7 +167,18 @@ def test_shipped_expansion_2026_11(shipped):
     steel_look = {"black_oxide", "stainless_a2", "stainless_a4", "plain_steel"}
     assert set(shipped.families["DIN913"].finishes) == steel_look
     assert shipped.part("STANDOFF_MF_M3x10").length == 10
-    assert shipped.part("BRACKET_2020").length is None
+    assert shipped.part("BRACKET_2020_CAST").length is None
+    # two looks of one class: the compact keyed bracket and the common cast "2028" bracket
+    styles = {p.id: p.class_name for p in shipped.parts if p.family == "BRACKET"}
+    assert styles["BRACKET_2020_KEYED"] == styles["BRACKET_2020_CAST"] == "BRACKET_2020"
+    cast = shipped.part("BRACKET_2020_CAST").dims
+    assert (cast["a"], cast["w"], cast["t"], cast["dh"], cast["dh"] + cast["slot"]) == (
+        28,
+        20,
+        3.5,
+        6,
+        11,
+    )  # the vendor drawing: 28 mm legs, 20 mm wide, 3.5 mm walls, 6 x 11 mm hole
     # threaded rod and standoffs are classes now, not unknown junk
     assert not {"threaded_rod", "standoff"} & set(shipped.unknown.types)
 
