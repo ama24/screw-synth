@@ -26,7 +26,8 @@ calibrated yet; follow the procedure below.
   ```bash
   sudo apt install -y python3-picamera2 python3-numpy
   python3 -m venv --system-site-packages ~/screwcam && source ~/screwcam/bin/activate
-  pip install -r rig/requirements-pi.txt                  # screwsynth + screwrig + OpenCV (headless)
+  pip install --no-deps --require-hashes -r rig/requirements-pi.txt
+  pip install --no-deps --no-build-isolation -e . -e ./rig   # screwsynth + screwrig
   ```
 
 ## Step-by-step procedure

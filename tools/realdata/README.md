@@ -47,7 +47,7 @@ class per session. That keeps the matching (step 6) automatic.
 ### 3. Capture on the Pi
 
 ```bash
-# on the Pi, with both packages installed (pip install -r rig/requirements-pi.txt, see rig/README.md)
+# on the Pi, with both packages installed (see rig/README.md: pinned rig/requirements-pi.txt)
 screwrig capture --session s01 --settings camera_settings.json --recheck
 ```
 
