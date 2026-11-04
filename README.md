@@ -180,7 +180,8 @@ sudo apt update && sudo apt install -y python3-picamera2 python3-numpy git
 git clone https://github.com/ama24/supreme-screw-sortering.git && cd supreme-screw-sortering
 python3 -m venv --system-site-packages ~/screwrig     # system packages: Picamera2 comes from apt
 source ~/screwrig/bin/activate
-pip install -r rig/requirements-pi.txt                # screwsynth + screwrig + OpenCV (headless)
+pip install --no-deps --require-hashes -r rig/requirements-pi.txt   # pinned: exact versions + hashes
+pip install --no-deps --no-build-isolation -e . -e ./rig   # screwsynth + screwrig
 rpicam-hello --list-cameras                           # the IMX708 must be listed
 screwrig --help
 ```

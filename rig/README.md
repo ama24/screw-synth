@@ -17,15 +17,23 @@ sudo apt update && sudo apt install -y python3-picamera2 python3-numpy git libgl
 git clone https://github.com/ama24/supreme-screw-sortering.git && cd supreme-screw-sortering
 python3 -m venv --system-site-packages ~/screwrig     # Picamera2 comes from apt, not pip
 source ~/screwrig/bin/activate
-pip install -r rig/requirements-pi.txt                # screwsynth + screwrig + OpenCV + PyTorch (CPU) + Ultralytics + NCNN
-pip check                                             # "No broken requirements found."
+pip install --no-deps --require-hashes -r rig/requirements-pi.txt   # pinned: exact versions + hashes
+pip install --no-deps --no-build-isolation -e . -e ./rig   # screwsynth + screwrig
 screwrig --help
 ```
 
 The install takes 10–20 minutes. It needs the 64-bit OS (`uname -m` prints `aarch64`).
 
+**Every package is pinned.** `rig/requirements-pi.txt` lists every package the Pi needs (OpenCV, PyTorch CPU,
+Ultralytics, NCNN and everything they pull in) with its exact version and a checksum of the file, for Python 3.11
+(Bookworm) and 3.13 (Trixie). With `--no-deps --require-hashes` pip installs exactly these and refuses anything
+else, so installing again later gives the same programs. `pip check` complains that Ultralytics wants
+`opencv-python`: that is on purpose (the pinned `opencv-contrib-python-headless` provides `cv2` with ArUco; both
+together overwrite each other). To upgrade deliberately: `python scripts/lock_pi.py`, test on the Pi, commit.
+screwpick's `requirements-pi.lock.txt` has the same versions (plus its own two packages).
+
 **PyTorch must be the CPU build.** The PyPI build for 64-bit ARM is the NVIDIA one (version ending in `+cu…`); on a
-Pi 4 it stops with "Illegal instruction". `requirements-pi.txt` takes PyTorch from its CPU-only index, and
+Pi 4 it stops with "Illegal instruction". `requirements-pi.txt` pins PyTorch's CPU build (`+cpu`) from its CPU-only index, and
 `screwrig detect` refuses to start with a `+cu` build and prints the fix. To repair an existing install:
 
 ```bash
