@@ -2,7 +2,8 @@
 
 `screwrig` runs on the Raspberry Pi that sits on the rig. It drives:
 - the **Pi Camera 3**, with locked exposure, gain, white balance and focus;
-- the **printer bed**: homing and parking Y over USB serial.
+- the **printer bed**: homing and parking Y, through Klipper (Moonraker) or, with stock firmware, over USB
+  serial.
 
 It records the captures for calibration (tool 03) and for real-data sessions (tool 09). Later it will also run the
 sorter loop: photo → detect → measure → pick.
@@ -90,10 +91,17 @@ Only these G-code commands can ever be sent:
 - `M400` (wait for moves to finish);
 - `M114` (report the position).
 
-Anything else is refused before it reaches the serial port. The settings live under `rig.printer` in
-`configs/config.yaml`: `port`, `baud`, `park_y_mm`, `feed_mm_min` and `timeout_s`.
+Anything else is refused before it reaches the printer. The settings live under `rig.printer` in
+`configs/config.yaml`: `driver`, `url`, `port`, `baud`, `park_y_mm`, `feed_mm_min` and `timeout_s`.
+
+**Klipper (as with the screwpick sorter):** Klipper owns the printer's USB port, and the board no longer understands
+plain G-code over it, so screwrig must not open the port. With `driver: auto` (the default) it sends the same
+commands through Moonraker (`url`, `http://localhost:7125` on the Pi) whenever Moonraker answers, and refuses to move
+a printer that is busy (printing, or the sorter running). `G28 Y` then runs Klipper's homing (with screwpick's
+`screwpick.cfg`, Z lifts first). The serial port is used only for a printer with its stock firmware (`driver:
+serial`, or `auto` without Moonraker).
 
 ## Tests
 
 `pytest rig/tests` runs off the Pi: the camera helpers are tested on synthetic images, and the printer on a fake
-serial port.
+serial port and a fake Moonraker.
