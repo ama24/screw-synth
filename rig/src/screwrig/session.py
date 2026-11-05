@@ -13,7 +13,7 @@ from screwsynth.common.io import read_json, write_json
 from screwsynth.common.paths import resolve
 from screwsynth.realdata.session import load_session
 
-from .printer import Printer, PrinterSettings
+from .printer import MoonrakerPrinter, Printer, PrinterSettings, open_printer
 
 log = logging.getLogger("screwrig.session")
 
@@ -28,12 +28,15 @@ def add_arguments(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--config")
 
 
-def printer_from_config(cfg, disabled: bool = False) -> Printer | None:
-    st = PrinterSettings.from_config(dict(cfg.get("rig.printer", {}) or {}))
-    return Printer(st) if st.port and not disabled else None
+def printer_from_config(cfg, disabled: bool = False) -> Printer | MoonrakerPrinter | None:
+    """The printer to home/park the bed with: through Klipper (Moonraker) when it answers,
+    else the serial port (rig.printer.driver); None when disabled or there is none."""
+    if disabled:
+        return None
+    return open_printer(PrinterSettings.from_config(dict(cfg.get("rig.printer", {}) or {})))
 
 
-def _recheck(cam, printer: Printer | None, d: Path, meta: dict) -> None:
+def _recheck(cam, printer: Printer | MoonrakerPrinter | None, d: Path, meta: dict) -> None:
     from screwsynth.calibration.cli import main as calib_main
 
     from .camera import save_capture

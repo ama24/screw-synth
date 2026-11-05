@@ -273,8 +273,10 @@ measure:
 
 # rig — the Raspberry Pi side (screwrig package: camera, printer bed, capture sessions)
 rig:
-  printer:                     # homing/parking the bed before each capture (Pi side, USB serial)
-    port: null                 # e.g. /dev/ttyUSB0; null = do not move the printer
+  printer:                     # homing/parking the bed before each capture (Pi side)
+    driver: auto               # auto: Klipper (Moonraker) if it answers, else serial | moonraker | serial
+    url: http://localhost:7125 # Moonraker (printer running Klipper, e.g. with the screwpick sorter)
+    port: null                 # serial (stock firmware only): e.g. /dev/ttyUSB0; null = no serial
     baud: 115200
     park_y_mm: null            # null = only home Y (G28 Y); a number also parks Y there (G0 Y...)
     feed_mm_min: 3000

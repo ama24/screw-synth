@@ -22,7 +22,10 @@ from . import capture, detect, lock, session
 def cmd_printer(args: argparse.Namespace) -> int:
     pr = session.printer_from_config(load_config(args.config))
     if pr is None:
-        raise SystemExit("no printer configured: set rig.printer.port in configs/config.yaml")
+        raise SystemExit(
+            "no printer: Klipper's Moonraker does not answer at rig.printer.url and no serial "
+            "rig.printer.port is set (configs/config.yaml)"
+        )
     try:
         if args.action == "park":
             pr.home_and_park()

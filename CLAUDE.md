@@ -122,6 +122,13 @@ Every tool reads the catalogue through `catalogue_from_config()`, so `catalogue.
     later the picker. `screwrig` imports `screwsynth`, never the other way round. Install both with
     `pip install -e . -e rig/`.
 - Measurement and inference (stage 2, used on the PC and the Pi) live in `src/screwsynth/measure`.
+- **The sorter on the Pi ([screwpick](https://github.com/ama24/screwpick)) installs a pinned commit of this
+  repository** (`SUPREME_COMMIT` in its `install-pi.sh`, plus its `requirements-pi.lock.txt`). Whenever code the Pi
+  runs changes here (`screwsynth` runtime: measure, calibration geometry, common; `screwrig`; `rig/requirements-pi.txt`),
+  bump that pin (and regenerate the lock if the requirements changed) in the same piece of work: never leave the Pi on
+  an old commit.
+- The printer runs Klipper on the Pi (Moonraker at http://localhost:7125). Nothing here opens the printer's USB port
+  while Klipper owns it: `screwrig` moves the bed through Moonraker (`rig.printer.driver: auto`).
 - **Generic model training is moving to the separate repository
   [model-trainer](https://github.com/ama24/model-trainer).** The two repositories exchange files only:
   - exported datasets go to the trainer (YOLO/COCO plus `groups.csv`: image -> layout);
