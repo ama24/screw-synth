@@ -129,6 +129,10 @@ Every tool reads the catalogue through `catalogue_from_config()`, so `catalogue.
   an old commit.
 - The printer runs Klipper on the Pi (Moonraker at http://localhost:7125). Nothing here opens the printer's USB port
   while Klipper owns it: `screwrig` moves the bed through Moonraker (`rig.printer.driver: auto`).
+- **On the sorter, screwpick is the only program that moves the printer.** It takes the camera calibration photos and
+  real-photo sessions from its web page, calling `screwrig.camera` (Camera, lock, save_capture, Coverage) and
+  `screwsynth.calibration` / `screwsynth.realdata.session`: keep those APIs stable (or change screwpick with them).
+  screwrig's own `calib-capture`, `capture` and `printer` commands are for use without screwpick.
 - **Generic model training is moving to the separate repository
   [model-trainer](https://github.com/ama24/model-trainer).** The two repositories exchange files only:
   - exported datasets go to the trainer (YOLO/COCO plus `groups.csv`: image -> layout);
