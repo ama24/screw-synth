@@ -150,6 +150,68 @@ def cmd_contact_sheet(ctx: _Ctx, args: argparse.Namespace) -> int:
     return 0
 
 
+ITEMS_FORMAT = "screwsynth-items"
+ITEMS_VERSION = 1
+
+
+def items_table(cat: Catalogue, assets_dir: Path) -> dict:
+    """What a sorter needs to know about each built part, without the meshes: its class,
+    length, volume and main dimensions (items.json; the screwpick sorter's Files tab takes it
+    for how full its bins are)."""
+    from screwsynth.common.io import read_json
+
+    rows = []
+    for p in cat.enabled_parts:
+        meta_path = assets.asset_dir(assets_dir, p.id) / assets.PART_JSON
+        if not meta_path.is_file():
+            continue
+        meta = read_json(meta_path)
+        mesh = meta.get("mesh", {})
+        rows.append(
+            {
+                "id": p.id,
+                "class": meta.get("class_name"),
+                "family": meta.get("family"),
+                "kind": meta.get("kind"),
+                "length": meta.get("length"),
+                "volume_mm3": round(float(mesh.get("volume_mm3", 0.0)), 2),
+                "bbox_mm": [
+                    round(hi - lo, 2)
+                    for lo, hi in zip(
+                        mesh.get("bbox_min", []), mesh.get("bbox_max", []), strict=False
+                    )
+                ],
+                "dims": meta.get("dims", {}),
+            }
+        )
+    return {
+        "format": ITEMS_FORMAT,
+        "version": ITEMS_VERSION,
+        "catalogue_hash": cat.hash,
+        "units": "mm",
+        "items": rows,
+    }
+
+
+def cmd_items(ctx: _Ctx, args: argparse.Namespace) -> int:
+    from screwsynth.common.io import write_json
+
+    table = items_table(ctx.catalogue, ctx.assets_dir)
+    if not table["items"]:
+        log.error(
+            "no built parts in %s: run `screwsynth-partgen build --all` first", ctx.assets_dir
+        )
+        return 1
+    out = resolve(args.out)
+    write_json(out, table)
+    missing = len(ctx.catalogue.enabled_parts) - len(table["items"])
+    _out(
+        f"wrote {out} ({len(table['items'])} items"
+        + (f", {missing} not built yet)" if missing else ")")
+    )
+    return 0
+
+
 def cmd_clean(ctx: _Ctx, args: argparse.Namespace) -> int:
     keep = {p.id for p in ctx.catalogue.enabled_parts} if args.orphans else None
     removed = assets.clean(Path(ctx.assets_dir), keep)
@@ -191,6 +253,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--out", default="tools/partgen/contact_sheet.png")
     sp.add_argument("--columns", type=int, default=5)
     sp.set_defaults(func=cmd_contact_sheet)
+
+    sp = sub.add_parser(
+        "items", parents=[common], help="items.json: class, length, volume per part"
+    )
+    sp.add_argument("--out", default="items.json")
+    sp.set_defaults(func=cmd_items)
 
     sp = sub.add_parser("clean", parents=[common], help="delete generated asset folders")
     sp.add_argument("--orphans", action="store_true", help="only parts no longer enabled")
