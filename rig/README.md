@@ -5,6 +5,10 @@
 - the **printer bed**: homing and parking Y, through Klipper (Moonraker) or, with stock firmware, over USB
   serial.
 
+**With the screwpick sorter** the calibration photos and real-photo sessions are taken from screwpick's web page
+(Calibrate and Photos tabs): screwpick parks the bed and uses screwrig only for the camera. The commands below are
+for a rig without screwpick.
+
 It records the captures for calibration (tool 03) and for real-data sessions (tool 09). Later it will also run the
 sorter loop: photo → detect → measure → pick.
 
