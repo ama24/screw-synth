@@ -92,7 +92,12 @@
     "problems": []
   },
   "source": "parametric",
-  "info": {},
+  "info": {
+    "end_styles": [
+      "chamfer",
+      "chamfer"
+    ]
+  },
   "generator_version": "1",
   "lod": "med",
   "lod_params": {
@@ -100,5 +105,5 @@
     "axial_per_pitch": 12,
     "round_segments": 64
   },
-  "catalogue_hash": "45c205313178c13e"
+  "catalogue_hash": "1b70688426763d61"
 }
