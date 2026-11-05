@@ -24,6 +24,7 @@ screwsynth-partgen check --all                 # re-run the checks on existing a
 screwsynth-partgen preview --id DIN912_M4x16   # regenerate preview.png
 screwsynth-partgen contact-sheet               # tools/partgen/contact_sheet.png (one M4 part per family)
 screwsynth-partgen clean [--orphans]           # delete generated folders (--orphans: only disabled/removed parts)
+screwsynth-partgen items --out items.json     # class, length, volume per part: for the screwpick sorter
 ```
 
 `build` prints a summary: parts built, skipped and failed, plus triangle counts. A build is skipped when `part.json`
@@ -34,6 +35,13 @@ a part's dimensions in the catalogue therefore triggers a rebuild. After changin
 `--all` uses `partgen.workers` processes (0 = min(4, CPUs)). If worker processes cannot start, for example
 because Windows is out of commit memory with large applications open, the build continues in a single process.
 Use `--workers 1` to force this. A full serial build of 347 parts takes about 2.5 minutes.
+
+## items.json (for the sorter)
+
+`screwsynth-partgen items --out items.json` writes one small file (about 250 kB) with, for every built part, its id,
+class, family, kind, length, mesh volume (mm³), bounding box and main dimensions. The screwpick sorter on the Pi takes
+it in its web page's **Files** tab to tell how full its bins are; it does not read this repository's folders. Make it
+again after the catalogue changes (new parts or sizes) and drop the new file there.
 
 ## Output per part (`data/assets/<part_id>/`)
 

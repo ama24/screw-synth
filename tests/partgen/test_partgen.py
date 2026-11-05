@@ -384,3 +384,20 @@ def test_cast_bracket_has_pockets_and_short_tabs(catalogue, built):
     keyed, kd = built["BRACKET_2020_KEYED"].mesh, catalogue.part("BRACKET_2020_KEYED").dims
     kv = keyed.vertices - keyed.bounds[0]
     assert kv[kv[:, 2] < kd["key_h"] - 1e-3][:, 0].max() > kd["a"] - 1  # keyed: along the leg
+
+
+def test_items_json_lists_built_parts(tmp_path):
+    """items.json: class, length and volume of every built part, for the sorter's bin fill."""
+    rc = main(["build", "--id", "DIN912_M4x16", "DIN934_M4", "--assets-dir", str(tmp_path / "a")])
+    assert rc == 0
+    out = tmp_path / "items.json"
+    assert main(["items", "--assets-dir", str(tmp_path / "a"), "--out", str(out)]) == 0
+    d = read_json(out)
+    assert d["format"] == "screwsynth-items" and d["version"] == 1
+    by_id = {r["id"]: r for r in d["items"]}
+    assert set(by_id) == {"DIN912_M4x16", "DIN934_M4"}
+    screw = by_id["DIN912_M4x16"]
+    assert screw["class"] == "DIN912_M4" and screw["length"] == 16.0
+    assert 250 < screw["volume_mm3"] < 350 and screw["dims"]["dk"] == 7.0
+    assert by_id["DIN934_M4"]["length"] is None
+    assert main(["items", "--assets-dir", str(tmp_path / "none"), "--out", str(out)]) == 1
