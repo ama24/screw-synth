@@ -58,6 +58,6 @@ data/hdri/*.hdr
 data/hdri/*.exr
 data/hdri/.thumbs/
 
-# trained model packages copied from model-trainer (weights, exports, model_card.json)
+# trained model packages copied from training-synth (weights, exports, model_card.json)
 models/*
 !models/README.md

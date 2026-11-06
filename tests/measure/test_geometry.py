@@ -176,6 +176,44 @@ def test_geometry_from_shipped_catalogue(tmp_path):
     assert "DIN934_M4" not in geo  # nuts are not measured
 
 
+def test_parts_table_for_a_sorter(tmp_path):
+    """parts.json: the format sortering-pnp reads (its measure/geometry.py, PARTS_FORMAT v1)."""
+    from screwsynth.common.config import Config, load_config
+    from screwsynth.measure.geometry import PARTS_FORMAT, PARTS_VERSION, parts_table
+
+    base = load_config().to_dict()
+    cfg = Config({**base, "paths": {**base["paths"], "rest_poses_dir": str(tmp_path)}})
+    table = parts_table(cfg)
+    assert (
+        (table["format"], table["version"])
+        == (PARTS_FORMAT, PARTS_VERSION)
+        == ("screwsynth-parts", 1)
+    )
+    m4 = table["classes"]["DIN912_M4"]
+    assert set(m4) == {
+        "family",
+        "size",
+        "kind",
+        "shape",
+        "mode",
+        "d",
+        "head_radius",
+        "head_height",
+        "headless",
+        "socket",
+        "cut_to_length",
+        "lengths",
+        "heights",
+    }
+    assert m4["socket"] and not m4["headless"] and m4["head_height"] == pytest.approx(4.0)
+    assert set(m4["heights"]) == {f"{v:g}" for v in m4["lengths"]}
+    assert (
+        table["classes"]["DIN975_M8"]["headless"] and table["classes"]["DIN975_M8"]["cut_to_length"]
+    )
+    assert "DIN934_M4" not in table["classes"]
+    json.dumps(table)  # plain JSON
+
+
 def test_thread_diameter_and_scene_camera():
     cam = nominal_camera()
     centre = cam.project(np.array([[110.0, 110.0, 2.0]]))[0]

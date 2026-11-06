@@ -220,6 +220,16 @@ def test_cli_export_preview_stats_merge(tmp_path, capsys):
     assert str(tmp_path / "m").replace("\\", "/") in (tmp_path / "m" / "seg.yaml").read_text(
         encoding="utf-8"
     )
+    # the class list and the parts table travel with every dataset, and from there into the model
+    # package (a sorter reads both)
+    seg_yaml = (tmp_path / "d1" / "seg.yaml").read_text(encoding="utf-8")
+    assert "package_files: [classes.yaml, parts.json]" in seg_yaml
+    assert (
+        (tmp_path / "d1" / "seg" / "classes.yaml").read_text(encoding="utf-8").startswith("names:")
+    )
+    assert read_json(tmp_path / "d1" / "seg" / "parts.json")["format"] == "screwsynth-parts"
+    assert (tmp_path / "m" / "seg" / "parts.json").is_file()
+    assert (tmp_path / "m" / "seg" / "classes.yaml").is_file()
 
 
 @pytest.mark.slow

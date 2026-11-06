@@ -17,7 +17,6 @@ TOOLS = [
     "postprocess",
     "labels",
     "measure",
-    "rig",
 ]
 
 

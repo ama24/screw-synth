@@ -1,4 +1,4 @@
-"""screwsynth-real: sessions, labelling and the real dataset (tool 09). Capturing runs on the Pi: screwrig capture."""
+"""screwsynth-real: sessions, labelling and the real dataset (tool 09). The photos are taken on the sorter: sortering-pnp's Photos tab."""
 
 from __future__ import annotations
 

@@ -1,12 +1,12 @@
-# Training the screw models with model-trainer
+# Training the screw models with training-synth
 
-Training now happens in [model-trainer](https://github.com/ama24/model-trainer); `screwsynth-train` is gone. This
-page lists the settings that suit this rig. Enter them once in the model-trainer wizard, then **Save as
+Training now happens in [training-synth](https://github.com/ama24/training-synth); `screwsynth-train` is gone. This
+page lists the settings that suit this rig. Enter them once in the training-synth wizard, then **Save as
 template** to reuse them.
 
 ## Which dataset file
 
-The dataset builder's **Run** tab → **Outputs** lists the exported files. In model-trainer, go to **Datasets →
+The dataset builder's **Run** tab → **Outputs** lists the exported files. In training-synth, go to **Datasets →
 Import** and paste the path of the `.yaml`:
 
 | Model | Import | Task in the wizard |

@@ -132,7 +132,7 @@ scenegen:
     focal_length_mm: 4.74
     pixel_size_um: 1.4
     resolution: [4608, 2592]
-    height_mm: 300             # lens to TPU plate top; also used by the measurement (infer, screwrig detect, realdata) until calibration.json exists
+    height_mm: 300             # lens to TPU plate top; also used by the measurement (infer, realdata) until calibration.json exists
   # Camera view per layout. Each setting is one value (fixed) or a range [min, max]; ranges are
   # covered evenly (also when you stop early or add layouts later). The defaults are the rig's own
   # view. Images from any other view are marked not measurable (length measurement needs the rig view).
@@ -270,14 +270,3 @@ measure:
     pose_conf: 0.5             # keypoint confidence needed to trust method A (else method B)
     border_px: 3               # masks within this of the ROI border: cut, not measurable
     method: auto               # auto | keypoints | classical
-
-# rig — the Raspberry Pi side (screwrig package: camera, printer bed, capture sessions)
-rig:
-  printer:                     # homing/parking the bed before each capture (Pi side)
-    driver: auto               # auto: Klipper (Moonraker) if it answers, else serial | moonraker | serial
-    url: http://localhost:7125 # Moonraker (printer running Klipper, e.g. with the screwpick sorter)
-    port: null                 # serial (stock firmware only): e.g. /dev/ttyUSB0; null = no serial
-    baud: 115200
-    park_y_mm: null            # null = only home Y (G28 Y); a number also parks Y there (G0 Y...)
-    feed_mm_min: 3000
-    timeout_s: 60

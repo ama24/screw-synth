@@ -43,7 +43,7 @@ screwsynth-real = "screwsynth.realdata.cli:main"
 packages = ["src/screwsynth"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "rig/tests"]
+testpaths = ["tests"]
 addopts = "-ra"
 markers = [
     "slow: needs Blender, a GPU, network or long runtimes (deselect with -m \"not slow\")",
@@ -52,11 +52,11 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-src = ["src", "tests", "rig/src", "rig/tests"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "PTH"]
 ignore = ["E501"]  # line length is handled by `ruff format`; long strings are allowed
 
 [tool.ruff.lint.isort]
-known-first-party = ["screwsynth", "screwrig"]
+known-first-party = ["screwsynth"]

@@ -44,28 +44,12 @@ UNKNOWN,,,4,wood screws and a bracket
 Tip: use different lengths of one class in a session only when they are easy to tell apart, or put one length per
 class per session. That keeps the matching (step 6) automatic.
 
-### 3. Capture on the Pi
+### 3. Take the photos on the sorter
 
-```bash
-# on the Pi, with both packages installed (see rig/README.md: pinned rig/requirements-pi.txt)
-screwrig capture --session s01 --settings camera_settings.json --recheck
-```
-
-1. **Recheck** (`--recheck`): lay the ChArUco board flat on the plate first. The pose is rechecked with tool 03,
-   and the session stops if the camera or plate has moved beyond the thresholds (`calibration.recheck_*`).
-2. **Each Enter:**
-   - homes Y and, if configured, parks Y;
-   - captures with the **locked** settings. The camera script refuses to run if the settings cannot be applied
-     exactly;
-   - saves `images/img_NNNN.png` with a JSON sidecar: session, time, settings, frame metadata, and an optional typed
-     note (e.g. "after removing the M5 nut").
-3. **Workflow:** take a photo, remove a part, take a photo, and so on, as the machine will do.
-
-**Printer settings** (`rig.printer` in the config):
-- the serial port (e.g. `/dev/ttyUSB0`), the baud rate, and an optional `park_y_mm`;
-- **only** `G28 Y`, `G0 Y<park_y_mm>` and `M400` are ever sent. Any other command is refused before it is written.
-
-Without a port, or with `--no-printer`, nothing moves.
+The photos are taken with [sortering-pnp](https://github.com/ama24/sortering-pnp) on the Pi (Photos tab): it parks
+the bed, uses the locked camera settings and saves `images/img_NNNN.png` with a JSON sidecar (session, time,
+settings, frame metadata). Workflow: take a photo, remove a part, take a photo, and so on, as the machine will do.
+Download the session as a zip and unpack it into `data/real/<session>/`.
 
 ### 4. Pre-annotate (once a stage-1 model exists)
 

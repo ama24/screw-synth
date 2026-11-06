@@ -1,4 +1,4 @@
-# supreme-screw-sortering — screw-synth
+# screw-synth
 
 Synthetic data and models for detecting, classifying and **measuring** metric fasteners (screws, nuts,
 washers, T-nuts) lying on the bed of a converted Ender 3, photographed by a fixed overhead Raspberry Pi
@@ -24,7 +24,7 @@ Project conventions are in [CLAUDE.md](CLAUDE.md). The build guide, with one pro
 |----|-------------|---------|--------|
 | 01 | catalogue   | `catalogue.yaml` of every part + validator + CLI to add parts | done |
 | 02 | partgen     | parametric mesh generator: render mesh, collision proxy, keypoints, `part.json` | done |
-| 03 | calibration | Pi capture scripts, ChArUco board, intrinsics, extrinsics, sensor profile | done |
+| 03 | calibration | ChArUco board, intrinsics, extrinsics, sensor profile (photos: sortering-pnp) | done |
 | 04 | restposes   | stable resting poses of each part (precomputed once) | done |
 | 05 | scenegen    | BlenderProc scene generation and rendering (RGB + instance mask + `meta.json`) | implemented (Blender run pending) |
 | 06 | postprocess | lens distortion (RGB and mask), noise, vignetting, compression | done |
@@ -53,8 +53,8 @@ Each tool has code in `src/screwsynth/<tool>/` and docs in `tools/<tool>/README.
 **Windows (PowerShell)**
 
 ```powershell
-git clone https://github.com/ama24/supreme-screw-sortering.git
-cd supreme-screw-sortering
+git clone https://github.com/ama24/screw-synth.git
+cd screw-synth
 py -3.12 -m venv .venv
 .venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -66,8 +66,8 @@ If PowerShell refuses to run `Activate.ps1`, allow local scripts once with
 **Linux**
 
 ```bash
-git clone https://github.com/ama24/supreme-screw-sortering.git
-cd supreme-screw-sortering
+git clone https://github.com/ama24/screw-synth.git
+cd screw-synth
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
@@ -141,7 +141,7 @@ blenderproc quickstart     # first run downloads Blender 4.2 (~400 MB) and rende
 
 ### 5. PyTorch + Ultralytics (tool 08: running the trained models)
 
-Training itself happens in [model-trainer](https://github.com/ama24/model-trainer); see
+Training itself happens in [training-synth](https://github.com/ama24/training-synth); see
 [tools/measure/TRAINING.md](tools/measure/TRAINING.md) for the settings. This repository only needs Ultralytics to
 *use* the models (`screwsynth-infer`, `screwsynth-eval`, the real-data tool).
 
@@ -165,29 +165,18 @@ python -c "import torch; print(torch.__version__, torch.cuda.is_available())"   
 | coacd | `pip install coacd` | Convex decomposition of STEP parts for collision. Otherwise a single convex hull is used. |
 | pycocotools | `pip install pycocotools` | COCO-style evaluation of the exported datasets |
 
-### 7. Raspberry Pi: the `screwrig` package
+### 7. The Raspberry Pi: sortering-pnp
 
-This repository holds two Python packages:
-- **`screwsynth`** (repository root) runs on the PC: dataset creation, calibration solving, labelling and
-  measurement.
-- **`screwrig`** ([rig/](rig/)) runs on the Raspberry Pi: the locked camera, the printer bed and capture sessions. It
-  uses `screwsynth` for the shared parts (catalogue, config, measurement).
-
-On the Pi (Raspberry Pi OS Bookworm, Camera Module 3 connected):
-
-```bash
-sudo apt update && sudo apt install -y python3-picamera2 python3-numpy git
-git clone https://github.com/ama24/supreme-screw-sortering.git && cd supreme-screw-sortering
-python3 -m venv --system-site-packages ~/screwrig     # system packages: Picamera2 comes from apt
-source ~/screwrig/bin/activate
-pip install --no-deps --require-hashes -r rig/requirements-pi.txt   # pinned: exact versions + hashes
-pip install --no-deps --no-build-isolation -e . -e ./rig   # screwsynth + screwrig
-rpicam-hello --list-cameras                           # the IMX708 must be listed
-screwrig --help
-```
-
-Copy the captures to the PC with `scp` or `rsync` (see [tools/calibration/README.md](tools/calibration/README.md)).
-Details: [rig/README.md](rig/README.md).
+Nothing from this repository runs on the Raspberry Pi. The sorter is
+[sortering-pnp](https://github.com/ama24/sortering-pnp), which has its own camera, calibration and
+measurement code. The projects only exchange files:
+- **Camera calibration:** take it in sortering-pnp's Calibrate tab, then copy its `calibration.json` to
+  `data/calibration/` here, so the renders use your camera.
+- **Real photos:** take them in sortering-pnp's Photos tab, then put the downloaded session in `data/real/`
+  (tool 09).
+- **Datasets:** every export carries `classes.yaml` and `parts.json` (the measuring and grip table). The trainer
+  ([training-synth](https://github.com/ama24/training-synth)) puts them into the model package, so the model you
+  upload to the sorter brings them along. `screwsynth-catalogue parts --out parts.json` writes the table on its own.
 
 ### 8. Check the installation
 
@@ -203,7 +192,7 @@ Commands installed by the package:
 |---|---|
 | `screwsynth-gui` | dataset builder in the browser (recipes, every setting, Run, live log and previews) |
 | `screwsynth-dataset` | the same from the terminal: `run`, `plan`, `new`, `list` |
-| `screwsynth-catalogue` | 01: parts, validation, classes.yaml |
+| `screwsynth-catalogue` | 01: parts, validation, classes.yaml, parts.json (for the sorter) |
 | `screwsynth-partgen` | 02: meshes, collision proxies, keypoints |
 | `screwsynth-calib` | 03: board, intrinsics, extrinsic, sensor, validate, recheck, report |
 | `screwsynth-restposes` | 04: stable poses |
@@ -214,7 +203,6 @@ Commands installed by the package:
 | `screwsynth-eval` | 08: mAP, size confusion, length accuracy, sim-to-real gap |
 | `screwsynth-compare-measure` | 08: measurement method A (keypoints) vs B (classical) on true masks |
 | `screwsynth-real` | 09: sessions, inventory, pre-annotation, CVAT round trip, length matching, val_real, sim-to-real report |
-| `screwrig` (Pi) | 03/09: lock camera settings, calibration captures, session capture with homing/parking, printer status |
 
 ### Troubleshooting
 

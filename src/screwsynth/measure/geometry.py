@@ -135,6 +135,55 @@ class Geometry:
         return cls(out)
 
 
+PARTS_FORMAT = "screwsynth-parts"  # parts.json: what a sorter needs to measure and grip each class
+PARTS_VERSION = 1  # change sortering-pnp's reader (measure/geometry.py) together with this
+
+
+def parts_table(cfg: Any) -> dict[str, Any]:
+    """parts.json: per class with a length (screws, standoffs) the standard lengths a measurement
+    snaps to, thread and head sizes (the grip point) and the axis heights of the lying poses.
+
+    It goes into every exported dataset next to classes.yaml and from there into the model package,
+    so a sorter (sortering-pnp) measures with exactly the catalogue the model was trained on."""
+    from screwsynth.catalogue.schema import LENGTH_KINDS, catalogue_from_config
+
+    cat = catalogue_from_config(cfg)
+    geo = Geometry.from_config(cfg)
+    first: dict[str, Any] = {}
+    for p in cat.enabled_parts:
+        if p.kind in LENGTH_KINDS and p.length is not None:
+            first.setdefault(p.class_name, p)
+    classes: dict[str, Any] = {}
+    for name in sorted(geo.classes):
+        g, p = geo.classes[name], first[name]
+        headless = p.kind == "standoff" or p.shape in ("set_screw", "threaded_rod")
+        classes[name] = {
+            "family": g.family,
+            "size": g.size,
+            "kind": g.kind,
+            "shape": p.shape,
+            "mode": g.mode,
+            "d": g.d,
+            "head_radius": g.head_radius,
+            "head_height": 0.0 if headless else float(p.dims.get("k", 0.0)),
+            "headless": headless,
+            "socket": p.shape in ("socket_cap", "button", "countersunk"),
+            "cut_to_length": g.cut_to_length,
+            "lengths": g.lengths,
+            "heights": {
+                f"{length:g}": {k: round(v, 4) for k, v in h.items()}
+                for length, h in sorted(g.heights_by_length.items())
+            },
+        }
+    return {
+        "format": PARTS_FORMAT,
+        "version": PARTS_VERSION,
+        "catalogue_hash": cat.hash,
+        "units": "mm",
+        "classes": classes,
+    }
+
+
 @dataclass
 class Measurement:
     raw_mm: float

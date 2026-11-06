@@ -1,6 +1,6 @@
 """Check a trained model against this project before using it.
 
-Models trained with model-trainer come as a package: weights plus `model_card.json` (classes in order,
+Models trained with training-synth come as a package: weights plus `model_card.json` (classes in order,
 image size, scores, dataset fingerprint). A model whose classes differ from the catalogue would report
 wrong part names, so the class list is checked when the models are loaded.
 """

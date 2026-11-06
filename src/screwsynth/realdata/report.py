@@ -86,7 +86,7 @@ def suggestions(
     if real_map is not None and syn_map is not None and syn_map - real_map > 0.15:
         out.append(
             f"large sim-to-real gap in mAP ({syn_map:.2f} synthetic vs {real_map:.2f} real): fix the realism "
-            "items above first; then consider fine-tuning on real data (model-trainer: start from your synthetic run, train on the real set)"
+            "items above first; then consider fine-tuning on real data (training-synth: start from your synthetic run, train on the real set)"
         )
     for name, ap in src.get("worst_classes_map", [])[:3]:
         if ap < 0.5:

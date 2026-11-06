@@ -156,7 +156,7 @@ ITEMS_VERSION = 1
 
 def items_table(cat: Catalogue, assets_dir: Path) -> dict:
     """What a sorter needs to know about each built part, without the meshes: its class,
-    length, volume and main dimensions (items.json; the screwpick sorter's Files tab takes it
+    length, volume and main dimensions (items.json; the sortering-pnp sorter's Files tab takes it
     for how full its bins are)."""
     from screwsynth.common.io import read_json
 
