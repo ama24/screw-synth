@@ -7,6 +7,8 @@ import json
 import logging
 import sys
 from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
 
 from screwsynth.common.config import load_config
 from screwsynth.common.io import read_json
@@ -47,12 +49,26 @@ def cmd_export(args: argparse.Namespace) -> int:
     bad = set(formats) - set(ex.FORMATS)
     if bad:
         raise SystemExit(f"unknown formats {sorted(bad)}; choose from {ex.FORMATS}")
-    names = ex.load_names(resolve(cfg.get("paths.classes", "configs/classes.yaml")))
+    classes_path = resolve(cfg.get("paths.classes", "configs/classes.yaml"))
+    names = ex.load_names(classes_path)
     out = resolve(args.out)
-    summary = ex.export(scenes, out, names, formats, st)
+    summary = ex.export(scenes, out, names, formats, st, package_files(cfg, classes_path))
     _out(f"exported {len(scenes)} scenes -> {out} ({', '.join(formats)})")
     _print_stats(summary)
     return 0
+
+
+def package_files(cfg: Any, classes_path: Path) -> dict[str, str]:
+    """classes.yaml and parts.json for the model package: a sorter (sortering-pnp) takes the class
+    list and the measuring table from the model it runs."""
+    from screwsynth.measure.geometry import parts_table
+
+    files = {"classes.yaml": classes_path.read_text(encoding="utf-8")}
+    try:
+        files["parts.json"] = json.dumps(parts_table(cfg), indent=1) + "\n"
+    except Exception as exc:  # noqa: BLE001 - the dataset is still fine without it
+        log.warning("no parts.json in the dataset: %s", exc)
+    return files
 
 
 def _print_stats(s: dict) -> None:

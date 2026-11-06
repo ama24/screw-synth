@@ -4,12 +4,14 @@ This tool calibrates the real Raspberry Pi Camera Module 3 so that the Blender c
 It also measures the sensor and lighting characteristics that tool 06 uses to make renders look like real
 captures. It has two halves:
 
-- **Pi side** (the `screwrig` package in [rig/](../../rig/)): `screwrig lock` and `screwrig calib-capture`, using
-  Picamera2 on the Raspberry Pi.
-- **PC side** (`screwsynth-calib`): solvers using OpenCV ≥ 4.7 ChArUco, run on the PC (or on the Pi).
+- **On the sorter** ([sortering-pnp](https://github.com/ama24/sortering-pnp), its Calibrate and Photos tabs): it
+  locks the camera, takes the photos and makes `calibration.json` by itself (board, lens, position). Copy that
+  file to `data/calibration/` here: that is all tool 05 needs.
+- **PC side** (`screwsynth-calib`): the same solvers plus the sensor profile, validation and report, from photos
+  taken with sortering-pnp (Photos tab: full-resolution PNGs with the locked settings).
 
 - **Outputs:** `data/calibration/` contains:
-  - `camera_settings.json`: the locked capture settings (written on the Pi).
+  - `camera_settings.json`: the locked capture settings (made by sortering-pnp).
   - `calibration.json`: intrinsics, extrinsics, ROI and homography. This is the only file tool 05 needs.
   - `sensor_profile.json`, `flatfield.png`, `plate_empty.png`.
   - `report.html`, `charuco_board.pdf`, `board.json`.
@@ -21,36 +23,27 @@ calibrated yet; follow the procedure below.
 ## Install
 
 - **PC:** `pip install -e ".[calib]"`
-- **Pi (Raspberry Pi OS Bookworm):**
-
-  ```bash
-  sudo apt install -y python3-picamera2 python3-numpy
-  python3 -m venv --system-site-packages ~/screwcam && source ~/screwcam/bin/activate
-  pip install --no-deps --require-hashes -r rig/requirements-pi.txt
-  pip install --no-deps --no-build-isolation -e . -e ./rig   # screwsynth + screwrig
-  ```
+- **Pi:** nothing from here. Install [sortering-pnp](https://github.com/ama24/sortering-pnp) there.
 
 ## Step-by-step procedure
 
-Run every `python3 ... .py` command on the Pi (in `~/calib`) and every `screwsynth-calib` command on the PC.
+The quick way: do the whole calibration in sortering-pnp's Calibrate tab and copy its `calibration.json` here.
+The steps below are the PC route, for the sensor profile, the validation and the report, or to solve with your
+own settings: take the photos with sortering-pnp (Photos tab) and run every `screwsynth-calib` command on the PC.
 
 1. **Freeze the rig.**
    - Camera mounted and screwed tight. LED panel on, shroud closed.
    - TPU plate in place. Y axis homed and parked (the bed moves in Y).
    - From now on, don't touch the camera, the focus or the plate.
-2. **Lock the camera settings** (Pi), with the empty plate under the camera:
+2. **Lock the camera settings** (sortering-pnp), with the empty plate under the camera:
 
-   ```bash
-   screwrig lock --out camera_settings.json --distance-mm 300
-   ```
-
-   The script:
+   In sortering-pnp: Calibrate tab, **Lock the camera**. It:
    - lets auto-exposure and auto white balance settle;
    - freezes exposure, gain and colour gains;
    - sweeps manual focus (variance of the Laplacian in the centre, coarse then fine, with a parabolic peak fit);
    - writes `camera_settings.json`.
 
-   Copy this file to the PC as `data/calibration/camera_settings.json`. Every later capture uses it.
+   Every later photo uses it.
 3. **Print the board** (PC):
 
    ```bash
@@ -67,19 +60,14 @@ Run every `python3 ... .py` command on the Pi (in `~/calib`) and every `screwsyn
      `--square-mm 17.96`.
    - `--markers` also writes SVGs for the optional plate-corner ArUco markers (see `corner_marker_ids` in the
      config).
-4. **Capture 25–40 intrinsic views** (Pi):
+4. **Take 25–40 intrinsic views** (sortering-pnp):
 
-   ```bash
-   screwrig calib-capture --settings camera_settings.json --out captures/intrinsics --mode intrinsics --board board.json
-   ```
-
-   Press Enter for each view and `q` to finish. After each view the script prints the live coverage map of where
-   corners have been seen, and warns about blur.
+   In sortering-pnp: Calibrate tab, **Lens** (it shows where corners have been seen so far).
    - Cover the **whole frame**, including the corners and edges.
    - Rotate the board in-plane, and tilt it by **±10° at most**. With locked focus at 300 mm, the depth of field is
      only about ±20 mm.
    - Hold the board still while capturing.
-5. **Solve intrinsics** (PC), after copying the captures (`scp -r pi@<pi-host>:~/calib/captures data/real/calib`):
+5. **Solve intrinsics** (PC), after copying the photos to `data/real/calib/intrinsics`:
 
    ```bash
    screwsynth-calib intrinsics --images data/real/calib/intrinsics --square-mm 17.96
@@ -90,10 +78,9 @@ Run every `python3 ... .py` command on the Pi (in `~/calib`) and every `screwsyn
      reprojection error.
    - It reports the RMS and the worst views. The target RMS is **< 0.5 px**. If it's above that, retake the worst
      views and the views of uncovered areas, then solve again.
-6. **Extrinsic: the plate frame.** Lay the board flat on the TPU plate with Y homed, then capture (Pi) and solve (PC):
+6. **Extrinsic: the plate frame.** Lay the board flat on the TPU plate with Y homed, then take a photo (sortering-pnp) and solve (PC):
 
    ```bash
-   screwrig calib-capture --settings camera_settings.json --out captures/extrinsic --mode extrinsic
    screwsynth-calib extrinsic --image data/real/calib/extrinsic/board_flat.png --square-mm 17.96 \
        --board-thickness-mm 4.1 --area-origin X Y --area-size 220 220
    ```
@@ -110,7 +97,8 @@ Run every `python3 ... .py` command on the Pi (in `~/calib`) and every `screwsyn
    - **Note:** at 300 mm the sensor sees only about 230 mm vertically (2592 px at about 11.3 px/mm). Keep
      `working_area.margin_mm` ≤ about 4 mm, or the ROI is clipped to the image height.
 7. **Validate with caliper-measured parts.** Lay flat objects of known length on the plate: gauge blocks, a steel
-   rule offcut, washers measured across their diameter, or screws lying flat. Capture with `--mode single`, then run:
+   rule offcut, washers measured across their diameter, or screws lying flat. Take a photo (sortering-pnp, Photos
+   tab), then run:
 
    ```bash
    screwsynth-calib validate --image data/real/calib/val.png --lengths 25.02 40.01 12.00 [--order x] [--height-mm 0]
@@ -121,16 +109,15 @@ Run every `python3 ... .py` command on the Pi (in `~/calib`) and every `screwsyn
    - It matches objects by size, or left to right in the plate frame with `--order x`.
    - The target is a **max error < 0.1–0.2 mm**. Thick objects need `--height-mm` (the height of their outline)
      because of parallax.
-8. **Sensor profile.** Capture (Pi), then solve (PC):
+8. **Sensor profile.** Take the photos (sortering-pnp, Photos tab), then solve (PC):
 
    ```bash
-   screwrig calib-capture --settings camera_settings.json --out captures/sensor --mode sensor --frames 20
    screwsynth-calib sensor --frames "data/real/calib/sensor/frame_*.png" \
        --white data/real/calib/sensor/white.png --empty data/real/calib/sensor/empty.png
    screwsynth-calib report --extrinsic-image data/real/calib/extrinsic/board_flat.png
    ```
 
-   The capture script prompts for three things:
+   The photos:
    - 20 frames of a static scene with a few parts;
    - the empty plate;
    - a matte white sheet covering the whole plate.
@@ -156,9 +143,6 @@ Run every `python3 ... .py` command on the Pi (in `~/calib`) and every `screwsyn
      above it) with the calibration.
    - It exits with code 1 and says **RECALIBRATE** above 0.15° or 0.3 mm. Then redo step 6.
    - Redo steps 2–6 if the focus or the camera mount changed. Redo step 8 if the lighting changed.
-
-Instead of copying captures to the PC, you can also install the package on the Pi
-(`pip install -e ".[calib]"`) and run `screwsynth-calib` there.
 
 ## `calibration.json` schema (all lengths in mm, pixels in the full 4608 × 2592 image)
 
@@ -199,4 +183,3 @@ The tests render ChArUco boards through a known K, distortion and pose, then che
 - Lengths measured on a distorted synthetic image are within 0.15 mm.
 - Recheck catches a height change and a tilt, but not a moved board.
 - The full CLI pipeline runs end to end.
-- The Pi helpers work: focus peak, settings mismatch (refuse to capture), coverage map, and capture sidecars.

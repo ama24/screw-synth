@@ -580,9 +580,9 @@ class BuilderPage:
                 else:
                     ui.label(f"No calibration yet ({calib} is missing).").classes("text-warning")
                     ui.markdown(
-                        "Calibration runs on the rig: print the board (`screwsynth-calib board`), capture "
-                        "with the Pi scripts, then solve intrinsics, extrinsic and sensor profile. See "
-                        "`tools/calibration/README.md`. Until then use the nominal camera."
+                        "The camera is calibrated on the sorter (sortering-pnp, Calibrate tab): copy its "
+                        "calibration.json here. See `tools/calibration/README.md`. Until then use "
+                        "the nominal camera."
                     ).classes("text-sm")
             with ui.card().classes("w-full"):
                 ui.label("Nominal camera").classes("font-bold")
@@ -843,7 +843,7 @@ class BuilderPage:
                 )
                 return
             ui.label(
-                "To train with model-trainer: Datasets > Import, and paste the path of a .yaml file "
+                "To train with training-synth: Datasets > Import, and paste the path of a .yaml file "
                 "(Copy path). Each .yaml is a separate dataset for a different model."
             ).classes("text-xs text-grey-8")
             for name, path, text in files:

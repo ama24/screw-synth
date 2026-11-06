@@ -221,6 +221,7 @@ def _write_dataset_yaml(
     pose: bool,
     real: str | None,
     val: str = "images/val",
+    package_files: Sequence[str] = (),
 ) -> None:
     lines = [f"path: {root.as_posix()}", "train: images/train", f"val: {val}"]
     if real:
@@ -231,6 +232,8 @@ def _write_dataset_yaml(
         lines += ["kpt_shape: [3, 3]", f"flip_idx: {FLIP_IDX}", f"kpt_names: {list(KEYPOINTS)}"]
     if (root / GROUPS_FILE).is_file():
         lines.append(f"groups: {GROUPS_FILE}  # image -> layout; one group never spans two splits")
+    if package_files:  # the trainer copies these into the model package (a sorter reads them)
+        lines.append(f"package_files: [{', '.join(package_files)}]")
     write_text(path, "\n".join(lines) + "\n")
 
 
@@ -249,8 +252,12 @@ def export(
     names: Mapping[int, str],
     formats: Sequence[str],
     st: Settings,
+    package_files: Mapping[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Export processed scenes to datasets under `out`."""
+    """Export processed scenes to datasets under `out`.
+
+    package_files: file name -> text (classes.yaml, parts.json), written into every format folder
+    and listed in its dataset yaml, for the model package."""
     formats = [f for f in formats if f in FORMATS]
     metas = {d: read_json(d / "meta.json") for d in scene_dirs}
     splits = split_layouts(
@@ -433,12 +440,18 @@ def export(
     stats["dropped"] = len(dropped_all)
     # dataset files
     real = st.val_real
+    extras = dict(package_files or {})
     for f in [*yolo_fmts, *(["coco"] if "coco" in formats else [])]:
         _write_groups(out / f / GROUPS_FILE, groups)
+        for name, text in extras.items():
+            write_text(out / f / name, text)
     for f in yolo_fmts:
-        _write_dataset_yaml(out / f"{f}.yaml", out / f, names, f == "pose", real)
+        pose = f == "pose"
+        _write_dataset_yaml(out / f"{f}.yaml", out / f, names, pose, real, package_files=[*extras])
         if real:
-            _write_dataset_yaml(out / f"{f}_real.yaml", out / f, names, f == "pose", None, val=real)
+            _write_dataset_yaml(
+                out / f"{f}_real.yaml", out / f, names, pose, None, real, package_files=[*extras]
+            )
     if "crops" in formats:
         _write_dataset_yaml(out / "crops.yaml", out / "crops", {0: "screw"}, True, None)
         with (out / "crops.csv").open("w", newline="", encoding="utf-8") as fh:
@@ -538,7 +551,7 @@ def merge(datasets: Sequence[Path], out: Path) -> dict[str, Any]:
             if not src.is_dir():
                 continue
             for p in src.rglob("*"):
-                if p.is_file() and p.suffix != ".json":
+                if p.is_file() and (p.suffix != ".json" or p.name == "parts.json"):
                     _link_or_copy(p, out / f / p.relative_to(src))
         st = read_json(ds / "stats.json")
         for key in ("per_class", "per_finish", "per_size", "per_length", "images", "instances"):

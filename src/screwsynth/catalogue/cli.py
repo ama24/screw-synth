@@ -274,6 +274,19 @@ def cmd_classes(ctx: _Ctx, args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_parts(ctx: _Ctx, args: argparse.Namespace) -> int:
+    import json
+
+    from screwsynth.common.io import write_text
+    from screwsynth.measure.geometry import parts_table
+
+    table = parts_table(load_config(args.config))
+    out = resolve(args.out)
+    write_text(out, json.dumps(table, indent=1) + "\n")
+    _out(f"wrote {len(table['classes'])} classes with a length to {out}")
+    return 0
+
+
 # -------------------------------------------------------------------------------------- parser
 
 
@@ -325,6 +338,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = add("classes", cmd_classes, "regenerate classes.yaml")
     sp.add_argument("--out", help="output path (default paths.classes)")
+
+    sp = add("parts", cmd_parts, "write parts.json, the measuring and grip table for a sorter")
+    sp.add_argument("--out", default="parts.json", help="output path (default parts.json)")
     return p
 
 

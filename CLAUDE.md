@@ -65,13 +65,13 @@ the tool you are working on before changing it.
 |----|-------------|---------|
 | 01 | catalogue   | catalogue.yaml of every part + validator + CLI to add parts |
 | 02 | partgen     | parametric mesh generator: render mesh, collision proxy, keypoints, part.json |
-| 03 | calibration | Pi capture scripts, ChArUco board, intrinsics, extrinsics, sensor profile |
+| 03 | calibration | ChArUco board, intrinsics, extrinsics, sensor profile (photos: sortering-pnp) |
 | 04 | restposes   | stable resting poses of each part (precomputed once) |
 | 05 | scenegen    | BlenderProc scene generation and rendering (RGB + instance mask + meta.json) |
 | 06 | postprocess | lens distortion (RGB and mask), noise, vignetting, compression |
 | 07 | labels      | export to YOLO seg/detect/pose/OBB and COCO, splits, preview overlays |
-| 08 | measure     | measurement, inference, evaluation (training: model-trainer, see tools/measure/TRAINING.md) |
-| 09 | realdata    | label a real validation set, compare real vs synthetic (capture: `screwrig` on the Pi) |
+| 08 | measure     | measurement, inference, evaluation on the PC (training: training-synth, see tools/measure/TRAINING.md) |
+| 09 | realdata    | label a real validation set, compare real vs synthetic (photos: sortering-pnp) |
 
 The dataset builder (`src/screwsynth/pipeline`, `screwsynth-dataset` / `screwsynth-gui`) runs 01, 02, 04,
 05, 06 and 07 from one recipe (`recipes/<name>.yaml`) as subprocesses. Each step is called with
@@ -116,27 +116,20 @@ Every tool reads the catalogue through `catalogue_from_config()`, so `catalogue.
 - Randomness: every random choice takes a seed; a given seed reproduces the same output.
 
 ## Layout
-- Two Python packages in this repository:
-  - **`screwsynth`** (root, `src/screwsynth`) is the PC side.
-  - **`screwrig`** (`rig/`, `rig/src/screwrig`) is the Raspberry Pi side: camera, printer bed, capture sessions,
-    later the picker. `screwrig` imports `screwsynth`, never the other way round. Install both with
-    `pip install -e . -e rig/`.
-- Measurement and inference (stage 2, used on the PC and the Pi) live in `src/screwsynth/measure`.
-- **The sorter on the Pi ([screwpick](https://github.com/ama24/screwpick)) installs a pinned commit of this
-  repository** (`SUPREME_COMMIT` in its `install-pi.sh`, plus its `requirements-pi.lock.txt`). Whenever code the Pi
-  runs changes here (`screwsynth` runtime: measure, calibration geometry, common; `screwrig`; `rig/requirements-pi.txt`),
-  bump that pin (and regenerate the lock if the requirements changed) in the same piece of work: never leave the Pi on
-  an old commit.
-- The printer runs Klipper on the Pi (Moonraker at http://localhost:7125). Nothing here opens the printer's USB port
-  while Klipper owns it: `screwrig` moves the bed through Moonraker (`rig.printer.driver: auto`).
-- **On the sorter, screwpick is the only program that moves the printer.** It takes the camera calibration photos and
-  real-photo sessions from its web page, calling `screwrig.camera` (Camera, lock, save_capture, Coverage) and
-  `screwsynth.calibration` / `screwsynth.realdata.session`: keep those APIs stable (or change screwpick with them).
-  screwrig's own `calib-capture`, `capture` and `printer` commands are for use without screwpick.
-- **Generic model training is moving to the separate repository
-  [model-trainer](https://github.com/ama24/model-trainer).** The two repositories exchange files only:
-  - exported datasets go to the trainer (YOLO/COCO plus `groups.csv`: image -> layout);
-  - model packages come back (weights plus `model_card.json`).
+- One Python package, **`screwsynth`** (`src/screwsynth`), for the PC. Nothing here runs on the Raspberry Pi.
+- **Three repositories, each working without the others; they exchange files only:**
+  - **screw-synth** (this one) makes the datasets. Every export carries `classes.yaml` and `parts.json`
+    (`screwsynth.measure.geometry.parts_table`: per class the standard lengths, thread and head sizes and axis
+    heights) in each format folder, listed under `package_files:` in its dataset yaml.
+  - **[training-synth](https://github.com/ama24/training-synth)** trains on them (YOLO/COCO plus `groups.csv`:
+    image -> layout) and returns model packages (weights, `model_card.json`, the `package_files`).
+  - **[sortering-pnp](https://github.com/ama24/sortering-pnp)** runs the sorter on the Pi with its own copy of the
+    camera, calibration and measurement code. It sends back `calibration.json` and real-photo sessions
+    (`data/real/<session>/`), and takes `items.json` (`screwsynth-partgen items`).
+- **Formats shared with sortering-pnp** (each side has its own code: change both together and bump the version):
+  `parts.json` (PARTS_FORMAT/PARTS_VERSION in `measure/geometry.py`), `calibration.json` (`calibration/`), real-photo
+  sessions (`realdata/session.py`), `items.json` (`partgen/cli.py`), the keypoint order and part ids
+  (`common/naming.py`). Measurement and inference in `src/screwsynth/measure` are for evaluation on the PC.
 - `configs/config.yaml` — one section per tool; load with `screwsynth.common.config.load_config()`.
 - `recipes/` — dataset recipes (pipeline settings + config overrides).
 - `requirements.lock.txt` — exact package versions; regenerate with `pip freeze --exclude-editable`

@@ -6,8 +6,9 @@ Measurement and inference use the trained models:
   the nearest standard length;
 - **evaluate** both against synthetic or real ground truth.
 
-The code is in `src/screwsynth/measure`. The PC uses it for evaluation and the real-data tool. The Pi (`screwrig`)
-will use it for sorting.
+The code is in `src/screwsynth/measure`. The PC uses it for evaluation and the real-data tool. The sorter on the Pi
+([sortering-pnp](https://github.com/ama24/sortering-pnp)) has its own copy and reads the per-class table from the
+`parts.json` that every dataset export (and so every model package) carries.
 
 - **Commands:** `screwsynth-infer`, `screwsynth-eval`, `screwsynth-compare-measure`
 - **Config:** the `measure:` section (`stage1_weights`, `stage2_weights`, `infer.*`)
@@ -78,8 +79,8 @@ screwsynth-infer --image capture.png --stage1 runs/seg/stage1_nano/weights/best.
 
 1. **Calibration** comes from `paths.calibration_dir` (or `--calibration`; `--nominal-camera` without it). Without a
    calibration the nominal camera is `scenegen.nominal_camera` (focal length, pixel size, resolution and
-   **height_mm**: set it to your measured lens-to-plate height until you calibrate). `screwrig detect` and
-   `screwsynth-real` use the same setting.
+   **height_mm**: set it to your measured lens-to-plate height until you calibrate). `screwsynth-real` uses the
+   same setting.
 2. **Input:** a full sensor frame is cropped to the ROI; an image that is already the ROI is used as it is.
 3. **Stage 1** runs on the ROI downscaled to 1024 px, and its polygons and boxes are mapped back to full resolution.
 4. **Each screw** is measured with A and B.
@@ -99,7 +100,7 @@ screwsynth-infer --image capture.png --stage1 runs/seg/stage1_nano/weights/best.
 ### ONNX and CPU latency
 
 ```bash
-# export in model-trainer (run page > Export > ONNX); it re-scores and times the model
+# export in training-synth (run page > Export > ONNX); it re-scores and times the model
 ```
 
 This writes the ONNX model and `<model>.latency.json`. Measured with onnxruntime on the development PC's

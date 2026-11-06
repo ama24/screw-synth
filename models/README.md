@@ -1,6 +1,6 @@
 # models
 
-Trained model packages from [model-trainer](https://github.com/ama24/model-trainer) go here (not tracked by git).
+Trained model packages from [training-synth](https://github.com/ama24/training-synth) go here (not tracked by git).
 Copy the run's whole **package** folder, so `model_card.json` comes along:
 
 ```
@@ -12,5 +12,4 @@ models/
   stage2/                      <- optional: the keypoint run's package
 ```
 
-Then `screwrig detect --nominal-camera` finds the newest model here by itself (see `rig/README.md`).
 Paths are relative to the repository root, from any folder.
