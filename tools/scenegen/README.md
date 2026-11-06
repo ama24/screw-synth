@@ -1,8 +1,8 @@
 # 05 scenegen
 
-The core renderer. It builds random single-layer scenes of fasteners lying on the TPU plate, seen by a virtual
-camera identical to the calibrated one, and writes three files per image: the RGB render, a 16-bit instance mask,
-and a `meta.json` with the full ground truth. It runs **inside Blender** through BlenderProc. Lens distortion and
+The core renderer. It builds random scenes of fasteners lying on the TPU plate (scattered, clumped, and in small
+stacks up to `max_layers`), seen by a virtual camera identical to the calibrated one, and writes three files per
+image: the RGB render, a 16-bit instance mask, and a `meta.json` with the full ground truth. It runs **inside Blender** through BlenderProc. Lens distortion and
 sensor effects are added later by tool 06.
 
 - **Inputs:**
@@ -12,13 +12,11 @@ sensor effects are added later by tool 06.
 - **Outputs:** `output/<run>/`
 - **Guide:** [docs/prompts/05_scenegen.txt](../../docs/prompts/05_scenegen.txt)
 
-**Status: implemented. The Blender part has not been executed yet.**
+**Status: done.** Rendered end to end in BlenderProc on the development PC (e.g. `dataset_overnight`: 1079
+scenes, post-processed and exported).
 - The pure-Python modules are unit tested: camera, composition sampler, placement, materials, ground truth and
-  the PNG writer.
-- The BlenderProc code was written against the installed BlenderProc 2.8 sources.
-- It could not be run on the development PC: Windows commit memory was exhausted by other applications (Blender
-  needs about 1–2 GB).
-- **First thing to do:** run `--preview` (below) and the slow smoke test, and report any error.
+  the PNG writer. The Blender smoke test is marked `slow`.
+- Not yet rendered with a real `calibration.json` (only `--nominal-camera`), since the rig has not been calibrated.
 
 ## What do I actually run?
 
